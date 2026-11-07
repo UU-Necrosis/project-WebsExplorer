@@ -1,0 +1,365 @@
+/* ============================================================
+   FILE DUY NHẤT cần import: chứa Fonts + Icons + Tailwind + 3 THEME
+   Trong main.tsx chỉ cần:  import './index.css'
+   Chuyển theme bằng cách bọc trang:
+     <div data-theme="admin">        → admin dashboard (sáng, xanh #059669)
+     <div data-theme="admin-auth">   → trang sign-in (sáng tím #faf8ff)
+     <div data-theme="client">       → client (dark, để sau này dùng)
+   ============================================================ */
+
+/* 1) Font chữ + Icon font (Material Symbols) */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap');
+
+/* 2) Tailwind CSS v4 */
+@import "tailwindcss";
+
+/* 3) Tailwind tham chiếu tới CSS variable — đổi giá trị variable là đổi theme */
+@theme {
+  --color-primary: var(--c-primary);
+  --color-primary-container: var(--c-primary-container);
+  --color-on-primary-container: var(--c-on-primary-container);
+  --color-primary-fixed: var(--c-primary-fixed);
+  --color-primary-fixed-dim: var(--c-primary-fixed-dim);
+  --color-on-primary-fixed: var(--c-on-primary-fixed);
+  --color-on-primary-fixed-variant: var(--c-on-primary-fixed-variant);
+
+  --color-secondary: var(--c-secondary);
+  --color-secondary-container: var(--c-secondary-container);
+  --color-on-secondary-container: var(--c-on-secondary-container);
+  --color-secondary-fixed: var(--c-secondary-fixed);
+  --color-secondary-fixed-dim: var(--c-secondary-fixed-dim);
+  --color-on-secondary-fixed: var(--c-on-secondary-fixed);
+  --color-on-secondary-fixed-variant: var(--c-on-secondary-fixed-variant);
+
+  --color-tertiary: var(--c-tertiary);
+  --color-tertiary-container: var(--c-tertiary-container);
+  --color-on-tertiary-container: var(--c-on-tertiary-container);
+  --color-tertiary-fixed: var(--c-tertiary-fixed);
+  --color-tertiary-fixed-dim: var(--c-tertiary-fixed-dim);
+  --color-on-tertiary-fixed: var(--c-on-tertiary-fixed);
+  --color-on-tertiary-fixed-variant: var(--c-on-tertiary-fixed-variant);
+
+  --color-surface: var(--c-surface);
+  --color-surface-bright: var(--c-surface-bright);
+  --color-surface-dim: var(--c-surface-dim);
+  --color-surface-variant: var(--c-surface-variant);
+  --color-surface-container-lowest: var(--c-surface-container-lowest);
+  --color-surface-container-low: var(--c-surface-container-low);
+  --color-surface-container: var(--c-surface-container);
+  --color-surface-container-high: var(--c-surface-container-high);
+  --color-surface-container-highest: var(--c-surface-container-highest);
+  --color-surface-tint: var(--c-surface-tint);
+
+  --color-background: var(--c-background);
+  --color-on-background: var(--c-on-background);
+  --color-on-surface: var(--c-on-surface);
+  --color-on-surface-variant: var(--c-on-surface-variant);
+
+  --color-outline: var(--c-outline);
+  --color-outline-variant: var(--c-outline-variant);
+
+  --color-error: var(--c-error);
+  --color-error-container: var(--c-error-container);
+  --color-on-error-container: var(--c-on-error-container);
+
+  --color-inverse-surface: var(--c-inverse-surface);
+  --color-inverse-on-surface: var(--c-inverse-on-surface);
+  --color-inverse-primary: var(--c-inverse-primary);
+
+  /* Token giống nhau ở mọi theme */
+  --color-on-primary: #ffffff;
+  --color-on-secondary: #ffffff;
+  --color-on-tertiary: #ffffff;
+  --color-on-error: #ffffff;
+
+  /* Custom token riêng của client homepage (dark) — dùng sau */
+  --color-surface-card: rgba(21, 26, 36, 0.7);
+  --color-primary-bright: #10b981;
+  --color-on-surface-muted: #94a3b8;
+  --color-outline-border: rgba(255, 255, 255, 0.08);
+  --color-outline-glow: rgba(0, 182, 122, 0.3);
+
+  /* Font family */
+  --font-sans: "Space Grotesk", "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Spacing custom */
+  --spacing-space-xs: 0.25rem;
+  --spacing-space-sm: 0.5rem;
+  --spacing-space-md: 1rem;
+  --spacing-space-lg: 1.5rem;
+  --spacing-space-xl: 2.5rem;
+  --spacing-gutter: 1.5rem;
+  --spacing-gutter-desktop: 2rem;
+  --spacing-gutter-mobile: 1rem;
+  --spacing-margin: 3rem;
+  --spacing-margin-mobile: 1.25rem;
+  --spacing-margin-desktop: 2rem;
+
+  /* Shadow custom */
+  --shadow-xs: 0 1px 2px 0 rgb(15 23 42 / 0.06);
+  --shadow-glow-emerald: 0 0 35px -5px rgba(0, 182, 122, 0.35);
+  --shadow-glow-emerald-sm: 0 0 15px -2px rgba(0, 182, 122, 0.4);
+  --shadow-glass-inset: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+}
+
+/* ============ THEME ADMIN (mặc định) — dashboard sáng / slate / emerald ============ */
+:root,
+[data-theme="admin"] {
+  --c-primary: #059669;
+  --c-primary-container: #d1fae5;
+  --c-on-primary-container: #065f46;
+  --c-primary-fixed: #a7f3d0;
+  --c-primary-fixed-dim: #6ee7b7;
+  --c-on-primary-fixed: #002113;
+  --c-on-primary-fixed-variant: #005137;
+
+  --c-secondary: #0d9488;
+  --c-secondary-container: #ccfbf1;
+  --c-on-secondary-container: #115e59;
+  --c-secondary-fixed: #99f6e4;
+  --c-secondary-fixed-dim: #5eead4;
+  --c-on-secondary-fixed: #00201d;
+  --c-on-secondary-fixed-variant: #005049;
+
+  --c-tertiary: #0284c7;
+  --c-tertiary-container: #e0f2fe;
+  --c-on-tertiary-container: #0369a1;
+  --c-tertiary-fixed: #e0f2fe;
+  --c-tertiary-fixed-dim: #bae6fd;
+  --c-on-tertiary-fixed: #00174b;
+  --c-on-tertiary-fixed-variant: #003ea8;
+
+  --c-surface: #f8fafc;
+  --c-surface-bright: #ffffff;
+  --c-surface-dim: #e2e8f0;
+  --c-surface-variant: #f1f5f9;
+  --c-surface-container-lowest: #ffffff;
+  --c-surface-container-low: #ffffff;
+  --c-surface-container: #f1f5f9;
+  --c-surface-container-high: #f8fafc;
+  --c-surface-container-highest: #e2e8f0;
+  --c-surface-tint: #059669;
+
+  --c-background: #f8fafc;
+  --c-on-background: #0f172a;
+  --c-on-surface: #0f172a;
+  --c-on-surface-variant: #64748b;
+
+  --c-outline: #94a3b8;
+  --c-outline-variant: #e2e8f0;
+
+  --c-error: #dc2626;
+  --c-error-container: #fee2e2;
+  --c-on-error-container: #991b1b;
+
+  --c-inverse-surface: #1e293b;
+  --c-inverse-on-surface: #f8fafc;
+  --c-inverse-primary: #68dba9;
+}
+
+/* ============ THEME ADMIN-AUTH — trang Sign In (sáng, nền tím nhạt) ============ */
+[data-theme="admin-auth"] {
+  --c-primary: #006948;
+  --c-primary-container: #00855d;
+  --c-on-primary-container: #f5fff7;
+  --c-primary-fixed: #85f8c4;
+  --c-primary-fixed-dim: #68dba9;
+  --c-on-primary-fixed: #002114;
+  --c-on-primary-fixed-variant: #005137;
+
+  --c-secondary: #006a61;
+  --c-secondary-container: #86f2e4;
+  --c-on-secondary-container: #006f66;
+  --c-secondary-fixed: #89f5e7;
+  --c-secondary-fixed-dim: #6bd8cb;
+  --c-on-secondary-fixed: #00201d;
+  --c-on-secondary-fixed-variant: #005049;
+
+  --c-tertiary: #0051d5;
+  --c-tertiary-container: #316bf3;
+  --c-on-tertiary-container: #fefcff;
+  --c-tertiary-fixed: #dbe1ff;
+  --c-tertiary-fixed-dim: #b4c5ff;
+  --c-on-tertiary-fixed: #00174b;
+  --c-on-tertiary-fixed-variant: #003ea8;
+
+  --c-surface: #faf8ff;
+  --c-surface-bright: #faf8ff;
+  --c-surface-dim: #d2d9f4;
+  --c-surface-variant: #dae2fd;
+  --c-surface-container-lowest: #ffffff;
+  --c-surface-container-low: #f2f3ff;
+  --c-surface-container: #eaedff;
+  --c-surface-container-high: #e2e7ff;
+  --c-surface-container-highest: #dae2fd;
+  --c-surface-tint: #006c4a;
+
+  --c-background: #faf8ff;
+  --c-on-background: #131b2e;
+  --c-on-surface: #131b2e;
+  --c-on-surface-variant: #3d4a42;
+
+  --c-outline: #6d7a72;
+  --c-outline-variant: #bccac0;
+
+  --c-error: #ba1a1a;
+  --c-error-container: #ffdad6;
+  --c-on-error-container: #93000a;
+
+  --c-inverse-surface: #283044;
+  --c-inverse-on-surface: #eef0ff;
+  --c-inverse-primary: #68dba9;
+}
+
+/* ============ THEME CLIENT — dark (để sau này dùng, chưa cần quan tâm) ============ */
+[data-theme="client"] {
+  --c-primary: #4edf9f;
+  --c-primary-container: #00b67a;
+  --c-on-primary-container: #003f28;
+  --c-primary-fixed: #6efcb9;
+  --c-primary-fixed-dim: #4edf9f;
+  --c-on-primary-fixed: #002113;
+  --c-on-primary-fixed-variant: #005234;
+
+  --c-secondary: #4edea3;
+  --c-secondary-container: #00a572;
+  --c-on-secondary-container: #00311f;
+  --c-secondary-fixed: #6ffbbe;
+  --c-secondary-fixed-dim: #4edea3;
+  --c-on-secondary-fixed: #002113;
+  --c-on-secondary-fixed-variant: #005236;
+
+  --c-tertiary: #7bd0ff;
+  --c-tertiary-container: #0eabe5;
+  --c-on-tertiary-container: #003b52;
+  --c-tertiary-fixed: #c4e7ff;
+  --c-tertiary-fixed-dim: #7bd0ff;
+  --c-on-tertiary-fixed: #001e2c;
+  --c-on-tertiary-fixed-variant: #004c69;
+
+  --c-surface: #0f131c;
+  --c-surface-bright: #353943;
+  --c-surface-dim: #0f131c;
+  --c-surface-variant: #31353f;
+  --c-surface-container-lowest: #0a0e17;
+  --c-surface-container-low: #181b25;
+  --c-surface-container: #1c1f29;
+  --c-surface-container-high: #262a34;
+  --c-surface-container-highest: #31353f;
+  --c-surface-tint: #4edf9f;
+
+  --c-background: #0f131c;
+  --c-on-background: #dfe2ef;
+  --c-on-surface: #dfe2ef;
+  --c-on-surface-variant: #bbcabf;
+
+  --c-outline: #86948a;
+  --c-outline-variant: #3c4a41;
+
+  --c-error: #ffb4ab;
+  --c-error-container: #93000a;
+  --c-on-error-container: #ffdad6;
+
+  --c-inverse-surface: #dfe2ef;
+  --c-inverse-on-surface: #2c303a;
+  --c-inverse-primary: #006c47;
+}
+
+/* 4) Custom CSS cố định */
+
+/* Fix icon Material Symbols */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Ẩn scrollbar */
+::-webkit-scrollbar { display: none; }
+html { scrollbar-width: none; }
+
+/* Reset cơ bản */
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+  background-color: var(--c-background);
+  color: var(--c-on-surface);
+}
+
+::selection { background: var(--c-primary); color: #ffffff; }
+
+/* Pattern lưới cyber (dùng ở client homepage sau này) */
+.bg-cyber-grid {
+  background-size: 40px 40px;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+}
+
+/* ---- Font size + line-height custom (theo đúng bản stitch) ---- */
+.font-body-md  { font-family: 'Inter', sans-serif; }
+.text-body-md  { font-size: 14px; line-height: 22px; letter-spacing: -0.006em; font-weight: 400; }
+.font-body-lg  { font-family: 'Inter', sans-serif; }
+.text-body-lg  { font-size: 16px; line-height: 26px; letter-spacing: -0.011em; font-weight: 400; }
+.font-body-sm  { font-family: 'Inter', sans-serif; }
+.text-body-sm  { font-size: 12px; line-height: 18px; letter-spacing: 0em; font-weight: 400; }
+.font-headline-lg  { font-family: 'Space Grotesk', sans-serif; }
+.text-headline-lg  { font-size: 32px; line-height: 40px; letter-spacing: -0.02em; font-weight: 600; }
+.font-headline-md  { font-family: 'Space Grotesk', sans-serif; }
+.text-headline-md  { font-size: 24px; line-height: 32px; letter-spacing: -0.015em; font-weight: 600; }
+.font-headline-sm  { font-family: 'Space Grotesk', sans-serif; }
+.text-headline-sm  { font-size: 18px; line-height: 26px; letter-spacing: -0.01em; font-weight: 600; }
+.font-label-caps  { font-family: 'JetBrains Mono', monospace; }
+.text-label-caps  { font-size: 11px; line-height: 14px; letter-spacing: 0.06em; font-weight: 600; }
+.font-label-numeric  { font-family: 'JetBrains Mono', monospace; }
+.text-label-numeric  { font-size: 13px; line-height: 16px; letter-spacing: -0.02em; font-weight: 500; }
+.font-label-lg  { font-family: 'Inter', sans-serif; }
+.text-label-lg  { font-size: 14px; line-height: 20px; letter-spacing: -0.005em; font-weight: 600; }
+.font-label-md  { font-family: 'Space Grotesk', sans-serif; }
+.text-label-md  { font-size: 12px; line-height: 16px; letter-spacing: 0em; font-weight: 500; }
+.font-label-sm  { font-family: 'Space Grotesk', sans-serif; }
+.text-label-sm  { font-size: 11px; line-height: 14px; letter-spacing: 0em; font-weight: 600; }
+.font-display-hero  { font-family: 'Space Grotesk', sans-serif; }
+.text-display-hero  { font-size: 56px; line-height: 64px; letter-spacing: -0.03em; font-weight: 700; }
+
+/* Unknown */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: inherit;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+* { scrollbar-width: none; }
+*::-webkit-scrollbar { display: none; }
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #f8fafc;
+  color: #0f172a;
+}

@@ -1,0 +1,104 @@
+import { useState } from 'react'
+import './css/AdminAuditLogsPage.css'
+
+const LOGS = [
+  { id: '1', event: 'SUBMISSION_APPROVED',  hash: '0x8a92...fc10', actor: 'root_operator', time: '2026-11-06 07:12:04 UTC', type: 'approve' },
+  { id: '2', event: 'SUBMISSION_REJECTED',  hash: '0x1c44...aa81', actor: 'root_operator', time: '2026-11-06 06:58:31 UTC', type: 'reject'  },
+  { id: '3', event: 'DIRECTORY_ENTRY_ADDED',hash: '0x4f12...7e99', actor: 'system',        time: '2026-11-06 06:45:18 UTC', type: 'add'     },
+  { id: '4', event: 'CONSENSUS_QUORUM_MET', hash: '0x9c31...2b88', actor: 'consensus',     time: '2026-11-06 06:30:02 UTC', type: 'quorum'  },
+  { id: '5', event: 'SUBMISSION_APPROVED',  hash: '0x77e1...912a', actor: 'root_operator', time: '2026-11-06 06:15:44 UTC', type: 'approve' },
+  { id: '6', event: 'ADMIN_LOGIN',          hash: '0xcc21...ff09', actor: 'root_operator', time: '2026-11-06 05:59:11 UTC', type: 'auth'    },
+  { id: '7', event: 'ENCLAVE_REKEY',        hash: '0xde90...3311', actor: 'system',        time: '2026-11-06 05:30:00 UTC', type: 'security'},
+  { id: '8', event: 'DIRECTORY_ENTRY_REMOVED',hash:'0xab33...de12',actor: 'root_operator', time: '2026-11-06 04:44:22 UTC', type: 'remove'  },
+]
+
+function typeBadge(type: string) {
+  const map: Record<string, { cls: string; label: string }> = {
+    approve:  { cls: 'green', label: 'Approved'  },
+    add:      { cls: 'green', label: 'Added'      },
+    quorum:   { cls: 'blue',  label: 'Quorum'     },
+    auth:     { cls: 'blue',  label: 'Auth'       },
+    reject:   { cls: 'amber', label: 'Rejected'   },
+    remove:   { cls: 'amber', label: 'Removed'    },
+    security: { cls: 'red',   label: 'Security'   },
+  }
+  return map[type] ?? { cls: 'blue', label: type }
+}
+
+export default function AdminAuditLogsPage() {
+  const [search, setSearch] = useState('')
+
+  const filtered = LOGS.filter((l) =>
+    l.event.toLowerCase().includes(search.toLowerCase()) ||
+    l.actor.toLowerCase().includes(search.toLowerCase()) ||
+    l.hash.toLowerCase().includes(search.toLowerCase())
+  )
+
+  return (
+    <div className="admin-audit">
+      <div>
+        <div className="admin-audit__breadcrumb">
+          <span>admin</span><span>/</span>
+          <span className="admin-audit__breadcrumb-active">audit-logs</span>
+        </div>
+        <h1 className="admin-audit__title">Admin Audit Logs</h1>
+        <p className="admin-audit__subtitle">Immutable cryptographic record of every admin action.</p>
+      </div>
+
+      <div className="admin-audit__card">
+        <div className="admin-audit__toolbar">
+          <div className="admin-audit__search-wrap">
+            <span className="material-symbols-outlined admin-audit__search-icon">search</span>
+            <input
+              className="admin-audit__search"
+              placeholder="Search events, actors, hash IDs..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <select className="admin-audit__select">
+            <option>All Event Types</option>
+            <option>Approvals</option>
+            <option>Auth</option>
+            <option>Security</option>
+          </select>
+        </div>
+
+        <table className="admin-audit__tbl">
+          <thead>
+            <tr>
+              <th>Event</th>
+              <th>Actor</th>
+              <th>Type</th>
+              <th>Timestamp (UTC)</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((l) => {
+              const badge = typeBadge(l.type)
+              return (
+                <tr key={l.id}>
+                  <td>
+                    <div className="admin-audit__event-name">{l.event}</div>
+                    <div className="admin-audit__event-hash">{l.hash}</div>
+                  </td>
+                  <td><span className="admin-audit__actor">{l.actor}</span></td>
+                  <td>
+                    <span className={`admin-audit__badge admin-audit__badge--${badge.cls}`}>
+                      <span className="admin-audit__badge-dot" />{badge.label}
+                    </span>
+                  </td>
+                  <td><span className="admin-audit__timestamp">{l.time}</span></td>
+                  <td>
+                    <button className="admin-audit__inspect-btn">Inspect</button>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
