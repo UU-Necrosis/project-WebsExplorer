@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth, checkDemoLogin } from '../../context/AuthContext'
+import { useAuth, authenticateDemoAccount } from '../../context/AuthContext'
 import './css/AdminLoginPage.css'
 
 export default function AdminLoginPage() {
@@ -29,10 +29,11 @@ export default function AdminLoginPage() {
     try {
       // ── Demo login (remove when backend is ready) ──────────
       await new Promise((r) => setTimeout(r, 800)) // simulate network
-      if (!checkDemoLogin(email, password)) {
+      const demoAccount = authenticateDemoAccount(email, password)
+      if (!demoAccount) {
         throw new Error('Invalid email or password.')
       }
-      login('demo-token')
+      login('demo-token', demoAccount.id)
       // ── Real API (uncomment when backend is ready) ─────────
       // const { token } = await authApi.login(email, password)
       // login(token)
@@ -65,7 +66,7 @@ export default function AdminLoginPage() {
                 <span className="material-symbols-outlined">admin_panel_settings</span>
               </div>
               <div>
-                <span className="admin-login__brand-name">WebsExplore</span>
+                <span className="admin-login__brand-name">Admin</span>
                 <span className="admin-login__brand-sub">Admin Console</span>
               </div>
             </a>

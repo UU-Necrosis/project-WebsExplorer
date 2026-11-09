@@ -1,27 +1,22 @@
 import { useNavigate } from 'react-router-dom'
+import { DEMO_SUBMISSIONS } from '../../context/WebsList'
+import { KPI_DATA, NODES } from '../../context/AdminDemoData'
 import './css/AdminOverviewPage.css'
 
-const KPI_DATA = [
-  { label: 'Total Directory Index', value: '1,142', unit: '', meta: '18 categories', status: 'Active',    pct: 88, icon: 'verified' },
-  { label: 'Pending Submissions',   value: '18',    unit: 'in queue', meta: 'Avg review: 14m', status: 'In Quorum', pct: 44, icon: 'inbox' },
-  { label: 'Audit Transactions',    value: '842k',  unit: '0 drift',  meta: '100% Merkle verified', status: 'Sealed 2m ago', pct: 100, icon: 'history_toggle_off' },
-  { label: 'Consensus & Replication', value: '99.998%', unit: 'SLA', meta: '5/5 SGX Enclaves', status: '12ms Sync', pct: 99, icon: 'hub' },
-]
 
-const SUBMISSIONS = [
-  { name: 'Latent Space Engine', hash: '0x8a92...fc10', status: 'amber', statusLabel: 'Consensus (3/5)' },
-  { name: 'V0 Dev Platform',     hash: '0x4f12...7e99', status: 'green', statusLabel: 'Staging (5/5)'   },
-  { name: 'MangaDex Open Reader',hash: '0x9c31...2b88', status: 'green', statusLabel: 'Consensus (4/5)' },
-  { name: 'Kagi Search',         hash: '0x77e1...912a', status: 'blue',  statusLabel: 'Audit (2/5)'     },
-]
+const SUBMISSIONS = DEMO_SUBMISSIONS.filter((submission) => submission.queue).slice(0, 5).map((submission) => {
+  const voteCount = new Set((submission.voters ?? []).map((vote) => vote.id)).size
+  const submittedAt = new Intl.DateTimeFormat('en-US', {
+    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'UTC',
+  }).format(new Date(submission.submittedAt))
 
-const NODES = [
-  { name: 'us-east-core-09',      region: 'Virginia',   ms: '12ms' },
-  { name: 'eu-central-sgx-02',    region: 'Frankfurt',  ms: '24ms' },
-  { name: 'ap-northeast-relay-01',region: 'Tokyo',      ms: '48ms' },
-  { name: 'us-west-leader-04',    region: 'Oregon',     ms: '18ms' },
-  { name: 'sa-east-sync-03',      region: 'São Paulo',  ms: '61ms' },
-]
+  return {
+    ...submission,
+    status: voteCount === 0 ? 'crimson' : voteCount >= 4 ? 'amber' : 'coral',
+    statusLabel: `In Consensus (${voteCount}/5)`,
+    submittedAt: `${submittedAt} UTC`,
+  }
+})
 
 export default function AdminOverviewPage() {
   const navigate = useNavigate()
@@ -155,40 +150,42 @@ export default function AdminOverviewPage() {
             <div className="admin-overview__card-hd">
               <div className="admin-overview__card-title">
                 Priority Submissions Requiring Attention
-                <span style={{
-                  marginLeft: 8, background: '#f0fdf4', color: '#065f46',
-                  border: '1px solid #bbf7d0', borderRadius: 4, padding: '1px 6px',
-                  fontSize: 10, fontFamily: 'JetBrains Mono, monospace', fontWeight: 700,
-                }}>4 QUEUED</span>
+                <span className="admin-overview__badge--queued">4 QUEUED</span>
               </div>
               <button className="admin-overview__card-link" onClick={() => navigate('/admin/submissions')}>
                 Open Queue <span className="material-symbols-outlined">arrow_forward</span>
               </button>
             </div>
-            <table className="admin-overview__table">
-              <tbody>
-                {SUBMISSIONS.map((s) => (
-                  <tr key={s.name}>
-                    <td>
-                      <div className="admin-overview__site-name">{s.name}</div>
-                      <div className="admin-overview__site-hash">auth-hash: {s.hash}</div>
-                    </td>
-                    <td style={{ textAlign: 'center' }}>
-                      <span className={`admin-overview__badge admin-overview__badge--${s.status}`}>
-                        <span className="admin-overview__badge-dot" />
-                        {s.statusLabel}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="admin-overview__table-actions">
-                        <button className="admin-overview__approve-btn">Approve</button>
-                        <button className="admin-overview__inspect-btn">Inspect</button>
-                      </div>
-                    </td>
+            <div className="admin-overview__submission-list" tabIndex={0} aria-label="Priority submissions">
+              <table className="admin-overview__table">
+                <thead>
+                  <tr>
+                    <th scope="col">Platform</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Submitted by</th>
+                    <th scope="col">Submitted at</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {SUBMISSIONS.map((s) => (
+                    <tr key={s.name}>
+                      <td>
+                        <div className="admin-overview__site-name">{s.name}</div>
+                        <div className="admin-overview__site-hash">auth-hash: {s.hash}</div>
+                      </td>
+                      <td>
+                        <span className={`admin-overview__badge admin-overview__badge--${s.status}`}>
+                          <span className="admin-overview__badge-dot" />
+                          {s.statusLabel}
+                        </span>
+                      </td>
+                      <td>{s.submittedBy}</td>
+                      <td>{s.submittedAt}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 

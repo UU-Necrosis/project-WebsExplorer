@@ -5,7 +5,7 @@ import './AdminLayout.css'
 
 const NAV_ITEMS = [
   { label: 'Overview',       path: '/admin/overview',     icon: 'grid_view' },
-  { label: 'Submissions',    path: '/admin/submissions',  icon: 'inbox',           badge: 14 },
+  { label: 'Submissions',    path: '/admin/submissions',  icon: 'inbox',           badge: 18 },
   { label: 'Directory',      path: '/admin/directory',    icon: 'verified' },
 ]
 
