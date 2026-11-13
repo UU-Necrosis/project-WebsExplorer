@@ -1,17 +1,3 @@
-export const KPI_DATA = [
-  { label: 'Total Directory Index', value: '1,142', unit: '', meta: '18 categories', status: 'Active', pct: 88, icon: 'verified' },
-  { label: 'Pending Submissions', value: '18', unit: 'in queue', meta: 'Avg review: 14m', status: 'In Quorum', pct: 44, icon: 'inbox' },
-  { label: 'Audit Transactions', value: '842k', unit: '0 drift', meta: '100% Merkle verified', status: 'Sealed 2m ago', pct: 100, icon: 'history_toggle_off' },
-  { label: 'Consensus & Replication', value: '99.998%', unit: 'SLA', meta: '5/5 SGX Enclaves', status: '12ms Sync', pct: 99, icon: 'hub' },
-]
-
-export const MOCK_KPIS = [
-  { label: 'Pending Review', val: '18', unit: 'websites', meta: 'Avg review time: 14 mins', status: '', pct: 72, icon: 'inbox' },
-  { label: 'Under Community Check', val: '7', unit: 'items', meta: 'Waiting for community votes', status: 'In Progress', pct: 38, icon: 'groups' },
-  { label: 'Verified Submissions', val: '100%', unit: 'safe', meta: 'Zero personal data collected', status: 'Protected', pct: 100, icon: 'verified_user' },
-  { label: 'Approval Rate', val: '99.8%', unit: 'approved', meta: 'Community accuracy rating', status: 'High', pct: 99.8, icon: 'check_circle' },
-]
-
 export const NODES = [
   { name: 'us-east-core-09', region: 'Virginia', ms: '12ms' },
   { name: 'eu-central-sgx-02', region: 'Frankfurt', ms: '24ms' },

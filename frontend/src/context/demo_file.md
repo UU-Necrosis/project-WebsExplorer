@@ -181,13 +181,10 @@ export const DEMO_SUBMISSIONS = [
 
 ## Duplicate Sources And Differences
 
-| Source | Export/list | Records | How it overlaps with `WebsList.ts` |
+| Source | Export/list | Records | How it overlaps with `WebsList.tsx` |
 | --- | --- | --- | --- |
 | `ClientSubmit.tsx` | `DEMO_SUBMISSIONS` | IDs 1, 2, 3, 4, 6, 7, 8, 9, 10, 12 | Same website/core fields as the corresponding records above. This copy does not include `fullHash`, `queue`, or `voters`. |
-| `WebsVerified.tsx` | `WEBSITES_LIST` | IDs 5 (Perplexity AI) and 11 (Anthropic) | Same website fields and votes as the corresponding records above; this copy does not include `fullHash`, `queue`, or `voters`. |
-| `WebsList.md` | `WEBSITES_LIST`, `ENTRIES`, `SUBMISSIONS` placeholders | Empty placeholder objects | No usable demo records currently; `SUBMISSIONS` is annotated with the old `AuthContext[]` type name. |
-
-The `ClientSubmit.tsx` list currently has a `clientVotes: [2, 3]` entry for Latent Space Engine, matching ID 1 above. The verified-site list's Perplexity and Anthropic vote arrays match IDs 5 and 11 above. The overlapping IDs are intentional in this inventory so their sources can be compared; no source files were changed to create this document.
+Verified entries Perplexity AI (ID 5) and Anthropic (ID 11) are included in `WebsList.tsx`, which is the source for all website records. `ClientSubmit.tsx` remains a separate demo submission list for client-side use.
 
 ## Admin Directory Fixture
 

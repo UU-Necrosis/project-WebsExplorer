@@ -1,11 +1,16 @@
 import { useState } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { DEMO_SUBMISSIONS, getSubmissionQueue } from '../context/ClientSubmit'
 import './AdminLayout.css'
+
+const pendingSubmissionCount = DEMO_SUBMISSIONS.filter(
+  (submission) => getSubmissionQueue(submission) === 'pending'
+).length
 
 const NAV_ITEMS = [
   { label: 'Overview',       path: '/admin/overview',     icon: 'grid_view' },
-  { label: 'Submissions',    path: '/admin/submissions',  icon: 'inbox',           badge: 18 },
+  { label: 'Submissions',    path: '/admin/submissions',  icon: 'inbox' },
   { label: 'Directory',      path: '/admin/directory',    icon: 'verified' },
 ]
 
@@ -102,8 +107,8 @@ export default function AdminLayout() {
               >
                 <span className="material-symbols-outlined">{item.icon}</span>
                 <span>{item.label}</span>
-                {item.badge && (
-                  <span className="admin-sidebar__nav-badge">{item.badge}</span>
+                {item.path === '/admin/submissions' && (
+                  <span className="admin-sidebar__nav-badge">{pendingSubmissionCount}</span>
                 )}
               </NavLink>
             ))}

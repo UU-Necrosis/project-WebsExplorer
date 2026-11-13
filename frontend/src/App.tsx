@@ -1,8 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { ClientSubmissionProvider } from './context/ClientSubmissionStore'
 
 // Layout
 import AdminLayout from './layout/AdminLayout'
+import ClientLayout from './pages/client/ClientLayout'
 
 // Admin pages
 import AdminLoginPage     from './pages/admin/AdminLoginPage'
@@ -13,14 +15,28 @@ import AdminAuditLogsPage from './pages/admin/security/AdminAuditLogsPage'
 
 // Client pages
 import ClientHomePage from './pages/client/ClientHomePage'
+import GuestHomePage from './pages/client/Guest pages/GuestHomePage'
+import UserHomePage from './pages/client/User pages/UserHomePage'
+import UserSubmitWeb from './pages/client/User pages/UserSubmitWeb'
+import UserProfileHomePage from './pages/client/User pages/profile/UserProfileHomePage'
 
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
+        <ClientSubmissionProvider>
+          <Routes>
           {/* ── Client pages ───────────────────────────── */}
-          <Route path="/" element={<ClientHomePage />} />
+          <Route element={<ClientLayout />}>
+            <Route index element={<ClientHomePage />} />
+            <Route path="home" element={<ClientHomePage />} />
+            <Route path="discover" element={<GuestHomePage />} />
+            <Route path="categories" element={<UserHomePage />} />
+            <Route path="submit" element={<UserSubmitWeb />} />
+            <Route path="profile" element={<UserProfileHomePage />} />
+            <Route path="guest" element={<GuestHomePage />} />
+            <Route path="user" element={<UserHomePage />} />
+          </Route>
 
           {/* ── Admin login (no sidebar) ───────────────── */}
           <Route path="/admin/login" element={<AdminLoginPage />} />
@@ -40,7 +56,8 @@ export default function App() {
 
           {/* ── Catch-all ──────────────────────────────── */}
           <Route path="*" element={<Navigate to="/admin/login" replace />} />
-        </Routes>
+          </Routes>
+        </ClientSubmissionProvider>
       </AuthProvider>
     </BrowserRouter>
   )

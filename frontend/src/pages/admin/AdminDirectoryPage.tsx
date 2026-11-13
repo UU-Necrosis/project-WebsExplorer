@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { DEMO_SUBMISSIONS } from '../../context/WebsList'
+import { useClientSubmissions } from '../../context/ClientSubmissionStore'
 import './css/AdminDirectoryPage.css'
-
-const ENTRIES = DEMO_SUBMISSIONS
 
 function formatTag(tag: string): string {
   const maxLength = 41
@@ -24,9 +22,10 @@ function formatCategory(category: string): string {
 }
 
 export default function AdminDirectoryPage() {
+  const { savedWebsites: entries, isLoading, loadError } = useClientSubmissions()
   const [search, setSearch] = useState('')
   const [expandedTagEntries, setExpandedTagEntries] = useState<Set<string>>(() => new Set())
-  const [verifiedEntries, setVerifiedEntries] = useState<Set<string>>(() => new Set(ENTRIES.map((entry) => entry.id)))
+  const [verifiedEntries, setVerifiedEntries] = useState<Set<string>>(() => new Set(entries.map((entry) => entry.id)))
   const [showBackToTop, setShowBackToTop] = useState(false)
   const searchToolbarRef = useRef<HTMLDivElement>(null)
 
@@ -42,7 +41,11 @@ export default function AdminDirectoryPage() {
     return () => observer.disconnect()
   }, [])
 
-  const filtered = ENTRIES.filter((e) =>
+  useEffect(() => {
+    setVerifiedEntries(new Set(entries.map((entry) => entry.id)))
+  }, [entries])
+
+  const filtered = entries.filter((e) =>
     e.name.toLowerCase().includes(search.toLowerCase()) ||
     e.url.toLowerCase().includes(search.toLowerCase())
   )
@@ -155,6 +158,9 @@ export default function AdminDirectoryPage() {
             </div>
           </div>
         ))}
+        {!isLoading && filtered.length === 0 && (
+          <p className="admin-dir__subtitle">{loadError || 'No websites have reached approval yet.'}</p>
+        )}
       </div>
       {showBackToTop && (
         <button

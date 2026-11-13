@@ -1,6 +1,16 @@
 // All real API calls go here.
 // Set VITE_API_URL in a .env file to point at your NestJS backend.
-const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
+import type { NewClientSubmission, SubmissionRecord } from '../context/ClientSubmissionStore'
+
+export interface ApiNode {
+  id: string
+  name: string
+  region: string
+  latencyMs: number | null
+  status: 'online' | 'offline' | 'maintenance'
+}
+
+const BASE = (import.meta.env.VITE_API_URL ?? 'http://localhost:3000').replace(/\/+$/, '')
 
 function authHeader(): Record<string, string> {
   const t = localStorage.getItem('admin_token')
@@ -32,14 +42,24 @@ export const authApi = {
 }
 
 export const submissionsApi = {
-  list:    ()           => req<unknown[]>('/api/submissions'),
-  approve: (id: string) => req<void>(`/api/submissions/${id}/approve`, { method: 'POST' }),
-  reject:  (id: string) => req<void>(`/api/submissions/${id}/reject`,  { method: 'POST' }),
+  list: () => req<SubmissionRecord[]>('/api/submissions'),
+  create: (submission: NewClientSubmission) => req<SubmissionRecord>('/api/submissions', {
+    method: 'POST',
+    body: JSON.stringify(submission),
+  }),
+  vote: (id: string, kind: 'admin' | 'client', voterId: number) =>
+    req<SubmissionRecord>(`/api/submissions/${id}/votes/${kind}`, {
+      method: 'POST',
+      body: JSON.stringify({ voterId }),
+    }),
 }
 
-export const directoryApi = {
-  list:   ()           => req<unknown[]>('/api/directory'),
-  remove: (id: string) => req<void>(`/api/directory/${id}`, { method: 'DELETE' }),
+export const savedWebsitesApi = {
+  list: () => req<SubmissionRecord[]>('/api/websites-saved'),
+}
+
+export const nodesApi = {
+  list: () => req<ApiNode[]>('/api/nodes'),
 }
 
 export const auditApi = {

@@ -16,6 +16,16 @@ export interface ClientSubmission {
 	role: string
 }
 
+export type SubmissionQueue = 'pending' | 'audit' | 'approved'
+
+export const ADMIN_VOTE_THRESHOLD = 5
+export const CLIENT_VOTE_THRESHOLD = 3
+
+export function getSubmissionQueue(submission: Pick<ClientSubmission, 'adminVotes'> & { queue?: SubmissionQueue }): SubmissionQueue {
+	if (submission.queue === 'approved') return 'approved'
+	return submission.adminVotes.length >= ADMIN_VOTE_THRESHOLD ? 'audit' : 'pending'
+}
+
 export const DEMO_SUBMISSIONS: ClientSubmission[] = [
 	{
 		id: '1',
@@ -196,4 +206,55 @@ export const DEMO_SUBMISSIONS: ClientSubmission[] = [
 		username: 'longdomain',
 		role: 'Owner',
 	},
+	{
+		id: '13',
+		name: 'Firefox',
+		hash: '0x1234...abcd',
+		submittedBy: 'mozilla',
+		submittedAt: '2026-11-06T07:00:00Z',
+		adminVotes: [8, 15, 9, 5, 22],
+		clientVotes: [],
+		url: 'https://firefox.com',
+		status: 'Visible',
+		appearance: 'Web browser',
+		description: 'Firefox is a free and open-source web browser developed by Mozilla Foundation and its subsidiary organizations.',
+		categories: ['Browser', 'Productivity'],
+		tags: ['Web Browser', 'Open Source'],
+		username: 'mozilla',
+		role: 'Admin',
+	},
+	{
+		id: '14',
+		name: 'Chrome',
+		hash: '0x5678...efgh',
+		submittedBy: 'google',
+		submittedAt: '2026-11-06T07:00:00Z',
+		adminVotes: [],
+		clientVotes: [],
+		url: 'https://chrome.com',
+		status: 'Visible',
+		appearance: 'Web browser',
+		description: 'Chrome is a free web browser developed by Google.',
+		categories: ['Browser', 'Productivity'],
+		tags: ['Web Browser', 'Google'],
+		username: 'google',
+		role: 'Admin',
+	},
+	{
+		id: '15',
+		name: 'Edge',
+		hash: '0x9abc...ijkl',
+		submittedBy: 'microsoft',
+		submittedAt: '2026-11-06T07:00:00Z',
+		adminVotes: [9,5,15,19,16],
+		clientVotes: [1,6,3],
+		url: 'https://edge.com',
+		status: 'Visible',
+		appearance: 'Web browser',
+		description: 'Edge is a free web browser developed by Microsoft.',
+		categories: ['Browser', 'Productivity'],
+		tags: ['Web Browser', 'Microsoft'],
+		username: 'microsoft',
+		role: 'Admin',
+	}
 ]

@@ -1,36 +1,24 @@
 
 import { useEffect, useState } from 'react'
-import { DEMO_SUBMISSIONS, type ReviewerVote, type SubmissionQueue } from '../../context/WebsList'
-import { MOCK_KPIS } from '../../context/AdminDemoData'
+import { useAuth } from '../../context/AuthContext'
+import { ADMIN_VOTE_THRESHOLD, CLIENT_VOTE_THRESHOLD, type SubmissionQueue } from '../../context/ClientSubmit'
+import { getSubmissionQueue, useClientSubmissions, type SubmissionRecord } from '../../context/ClientSubmissionStore'
 import './css/AdminSubmissionsPage.css'
 
-type Queue = SubmissionQueue
-
-const MAX_REVIEWERS = 5
-
-type Submission = (typeof DEMO_SUBMISSIONS)[number] & { queue: Queue; voters: ReviewerVote[] }
-
-function getReviewerCount(submission: Submission): number {
-  return Math.min(new Set(submission.voters.map((vote) => vote.id)).size, MAX_REVIEWERS)
-}
-
-function getSubmissionQueue(submission: Submission): Queue {
-  if (submission.queue === 'approved') return 'approved'
-  if (submission.queue === 'audit') return 'audit'
-  return getReviewerCount(submission) === MAX_REVIEWERS ? 'audit' : 'pending'
-}
-
-const INITIAL_SUBMISSIONS: Submission[] = DEMO_SUBMISSIONS.flatMap((submission) =>
-  submission.queue ? [{ ...submission, queue: submission.queue, voters: submission.voters ?? [] }] : []
-)
+type Submission = SubmissionRecord & { queue: SubmissionQueue }
 
 export default function AdminSubmissionsPage() {
   const [search, setSearch] = useState('')
   const [tab, setTab]       = useState<'pending' | 'audit'>('pending')
-  const [submissions, setSubmissions] = useState(INITIAL_SUBMISSIONS)
+  const { submissions: submissionRecords, isLoading, loadError, castVote } = useClientSubmissions()
+  const submissions: Submission[] = submissionRecords.map((submission) => ({
+    ...submission,
+    queue: getSubmissionQueue(submission),
+  }))
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null)
   const [drawerView, setDrawerView] = useState<'inspect' | 'preview' | 'history'>('inspect')
   const [notice, setNotice] = useState('')
+  const { accountId, demoAccounts } = useAuth()
 
   useEffect(() => {
     if (!selectedSubmission) return
@@ -48,13 +36,52 @@ export default function AdminSubmissionsPage() {
   )
   const pendingCount = submissions.filter((s) => getSubmissionQueue(s) === 'pending').length
   const auditCount = submissions.filter((s) => getSubmissionQueue(s) === 'audit').length
+  const queuedSubmissions = submissions.filter((s) => {
+    const queue = getSubmissionQueue(s)
+    return queue === 'pending' || queue === 'audit'
+  })
+  const pendingAdminVotes = submissions
+    .filter((submission) => getSubmissionQueue(submission) === 'pending')
+    .reduce((total, submission) => total + Math.min(submission.adminVotes.length, ADMIN_VOTE_THRESHOLD), 0)
+  const auditCommunityVotes = submissions
+    .filter((submission) => getSubmissionQueue(submission) === 'audit')
+    .reduce((total, submission) => total + Math.min(submission.clientVotes.length, CLIENT_VOTE_THRESHOLD), 0)
+  const pendingAdminVoteProgress = pendingCount ? Math.round((pendingAdminVotes / (pendingCount * ADMIN_VOTE_THRESHOLD)) * 100) : 0
+  const auditCommunityVoteProgress = auditCount ? Math.round((auditCommunityVotes / (auditCount * CLIENT_VOTE_THRESHOLD)) * 100) : 0
+  const totalVotes = pendingAdminVotes + auditCommunityVotes
+  const totalVoteSlots = pendingCount * ADMIN_VOTE_THRESHOLD + auditCount * CLIENT_VOTE_THRESHOLD
+  const voteProgress = totalVoteSlots ? Math.round((totalVotes / totalVoteSlots) * 100) : 0
+  const mockKpis = [
+    { label: 'Pending Review', val: String(pendingCount), unit: 'websites', meta: 'Admin votes required for audit', status: 'Sample data', pct: pendingAdminVoteProgress, icon: 'inbox' },
+    { label: 'Under Community Audit', val: String(auditCount), unit: 'websites', meta: 'Client votes required for review', status: 'Sample data', pct: auditCommunityVoteProgress, icon: 'groups' },
+    { label: 'Queued Submissions', val: String(queuedSubmissions.length), unit: 'websites', meta: 'Pending plus community audit', status: 'Sample data', pct: 100, icon: 'list_alt' },
+    { label: 'Stage Votes', val: String(totalVotes), unit: 'votes', meta: `Across ${queuedSubmissions.length} queued websites`, status: `${voteProgress}% quorum`, pct: voteProgress, icon: 'how_to_vote' },
+  ]
+  const selectedVoteIds = selectedSubmission
+    ? selectedSubmission.queue === 'pending' ? selectedSubmission.adminVotes : selectedSubmission.clientVotes
+    : []
+  const selectedVoteLimit = selectedSubmission?.queue === 'pending' ? ADMIN_VOTE_THRESHOLD : CLIENT_VOTE_THRESHOLD
+  const selectedVoteLabel = selectedSubmission?.queue === 'pending' ? 'Admin votes' : 'Client votes'
+  const selectedVoteAccounts = selectedVoteIds.map((id) => ({
+    id,
+    account: demoAccounts.find((account) => account.id === String(id)),
+  }))
 
-  function approveSubmission(submission: Submission) {
-    setSubmissions((current) => current.map((item) =>
-      item.id === submission.id ? { ...item, queue: 'approved' } : item
-    ))
-    setSelectedSubmission(null)
-    setNotice(`${submission.name} marked as approved in this demo. No backend changes were made.`)
+  async function castCurrentVote(submission: Submission) {
+    const voterId = Number(accountId)
+    if (!Number.isInteger(voterId) || voterId < 1) {
+      setNotice('Sign in with an account before voting.')
+      return
+    }
+
+    const kind = submission.queue === 'pending' ? 'admin' : 'client'
+    try {
+      const updated = await castVote(submission.id, kind, voterId)
+      setSelectedSubmission((current) => current?.id === updated.id ? { ...updated, queue: getSubmissionQueue(updated) } : current)
+      setNotice(`${kind === 'admin' ? 'Admin' : 'Client'} vote recorded for ${submission.name}.`)
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : 'Vote could not be recorded.')
+    }
   }
 
   function openSubmission(submission: Submission, view: 'inspect' | 'history') {
@@ -86,6 +113,8 @@ export default function AdminSubmissionsPage() {
         </div>
       </div>
 
+      {(loadError || notice) && <p className="admin-subs__subtitle" role="status">{notice || loadError}</p>}
+
       {/* Banner */}
       <div className="admin-subs__banner">
         <div className="admin-subs__banner-left">
@@ -107,7 +136,7 @@ export default function AdminSubmissionsPage() {
 
       {/* Mock KPIs */}
       <div className="admin-subs__kpi-grid">
-        {MOCK_KPIS.map((k) => (
+        {mockKpis.map((k) => (
           <div key={k.label} className="admin-subs__kpi">
             <div className="admin-subs__kpi-top">
               <span className="admin-subs__kpi-label">{k.label}</span>
@@ -180,7 +209,13 @@ export default function AdminSubmissionsPage() {
             </tr>
           </thead>
           <tbody>
-            {filtered.map((s) => (
+            {filtered.map((s) => {
+              const voteLimit = tab === 'pending' ? ADMIN_VOTE_THRESHOLD : CLIENT_VOTE_THRESHOLD
+              const voteCount = Math.min(tab === 'pending' ? s.adminVotes.length : s.clientVotes.length, voteLimit)
+              const voteEmpty = voteCount === 0
+              const voteLabel = tab === 'pending' ? 'Admin votes' : voteEmpty ? 'Need votes' : 'Client votes'
+
+              return (
               <tr key={s.id}>
                 <td>
                   <div className="admin-subs__site-name">{s.name}</div>
@@ -198,20 +233,20 @@ export default function AdminSubmissionsPage() {
                 </td>
                 <td>
                   <div className="admin-subs__consensus-wrap">
-                    <span className={`admin-subs__badge admin-subs__badge--${getReviewerCount(s) === MAX_REVIEWERS ? 'green' : 'amber'}`}>
+                    <span className={`admin-subs__badge admin-subs__badge--${voteEmpty ? 'coral' : 'amber'}`}>
                       <span className="admin-subs__badge-dot" />
-                      {getReviewerCount(s) === MAX_REVIEWERS ? 'Voting closed' : 'In Consensus'} ({getReviewerCount(s)}/{MAX_REVIEWERS})
+                      {voteLabel} ({voteCount}/{voteLimit})
                     </span>
                     <div className="admin-subs__progress">
-                      <div className={`admin-subs__progress-fill admin-subs__progress-fill--${getReviewerCount(s) === MAX_REVIEWERS ? 'green' : 'amber'}`} style={{ width: `${(getReviewerCount(s) / MAX_REVIEWERS) * 100}%` }} />
+                      <div className={`admin-subs__progress-fill admin-subs__progress-fill--${voteEmpty ? 'coral' : 'amber'}`} style={{ width: `${(voteCount / voteLimit) * 100}%` }} />
                     </div>
                   </div>
                 </td>
                 <td>
                   <div className="admin-subs__row-actions">
-                    {tab === 'pending' && (
-                      <button type="button" className="admin-subs__approve-btn" onClick={() => approveSubmission(s)}>Quick Approve</button>
-                    )}
+                    <button type="button" className="admin-subs__approve-btn" disabled={!accountId} onClick={() => void castCurrentVote(s)}>
+                      {tab === 'pending' ? 'Admin vote' : 'Client vote'}
+                    </button>
                     <button type="button" className="admin-subs__inspect-btn" onClick={() => openSubmission(s, 'inspect')}>Inspect</button>
                     <button type="button" className="admin-subs__log-btn" title="View audit history" aria-label={`View audit history for ${s.name}`} onClick={() => openSubmission(s, 'history')}>
                       <span className="material-symbols-outlined">history</span>
@@ -219,10 +254,11 @@ export default function AdminSubmissionsPage() {
                   </div>
                 </td>
               </tr>
-            ))}
-            {filtered.length === 0 && (
+              )
+            })}
+            {!isLoading && filtered.length === 0 && (
               <tr>
-                <td className="admin-subs__empty" colSpan={4}>No submissions match this filter.</td>
+                <td className="admin-subs__empty" colSpan={4}>{loadError || 'No submissions match this filter.'}</td>
               </tr>
             )}
           </tbody>
@@ -272,24 +308,24 @@ export default function AdminSubmissionsPage() {
                   <dl className="admin-subs__detail-list">
                     <div><dt>Submitted by</dt><dd>{selectedSubmission.submittedBy}</dd></div>
                     <div><dt>Submitted at</dt><dd>{selectedSubmission.submittedAt}</dd></div>
-                    <div><dt>Reviewer votes</dt><dd>{getReviewerCount(selectedSubmission)} of {MAX_REVIEWERS}</dd></div>
+                    <div><dt>{selectedVoteLabel}</dt><dd>{selectedVoteIds.length} of {selectedVoteLimit}</dd></div>
                     <div><dt>Full auth hash</dt><dd className="admin-subs__full-hash">{selectedSubmission.fullHash}</dd></div>
                   </dl>
                 </section>
                 <section className="admin-subs__detail-section">
-                  <h3>Vote history</h3>
+                  <h3>{selectedVoteLabel} by account</h3>
                   <ul className="admin-subs__vote-list">
-                    {selectedSubmission.voters.map((vote) => (
-                      <li key={`${vote.name}-${vote.time}`}>
+                    {selectedVoteAccounts.map(({ id, account }) => (
+                      <li key={id}>
                         <span className="admin-subs__vote-dot" />
-                        <span><strong>{vote.name}</strong> voted {vote.decision}</span>
-                        <time>{vote.time}</time>
+                        <span><strong>{account?.name ?? `Account ${id}`}</strong>{account ? ` · ${account.email}` : ''}</span>
+                        <time>{account?.status ?? 'unknown'}</time>
                       </li>
                     ))}
-                    {getReviewerCount(selectedSubmission) < MAX_REVIEWERS ? (
-                      <li className="admin-subs__vote-pending">Waiting for {MAX_REVIEWERS - getReviewerCount(selectedSubmission)} more vote(s)</li>
+                    {selectedVoteIds.length < selectedVoteLimit ? (
+                      <li className="admin-subs__vote-pending">Waiting for {selectedVoteLimit - selectedVoteIds.length} more vote(s)</li>
                     ) : (
-                      <li className="admin-subs__vote-pending">Voting is closed. This submission has reached the five-reviewer limit.</li>
+                      <li className="admin-subs__vote-pending">This stage has reached its vote limit.</li>
                     )}
                   </ul>
                 </section>
@@ -308,11 +344,14 @@ export default function AdminSubmissionsPage() {
               </div>
             ) : drawerView === 'history' ? (
               <div className="admin-subs__drawer-body">
-                <p className="admin-subs__history-note">Sample audit events; connect an audit API to show persisted history.</p>
+                <p className="admin-subs__history-note">Vote IDs are mapped to demo account details. Vote timestamps are not included in the sample data.</p>
                 <ol className="admin-subs__timeline">
                   <li><strong>Submission received</strong><span>{selectedSubmission.submittedBy} · {selectedSubmission.submittedAt}</span></li>
-                  {selectedSubmission.voters.map((vote) => (
-                    <li key={`${vote.name}-${vote.time}`}><strong>Community vote: {vote.decision}</strong><span>{vote.name} · {vote.time}</span></li>
+                  {selectedVoteAccounts.map(({ id, account }) => (
+                    <li key={id}>
+                      <strong>{selectedVoteLabel} recorded</strong>
+                      <span>{account?.name ?? `Account ${id}`}{account ? ` · ${account.email}` : ''}</span>
+                    </li>
                   ))}
                 </ol>
               </div>
@@ -331,8 +370,10 @@ export default function AdminSubmissionsPage() {
             )}
             <footer className="admin-subs__drawer-footer">
               <button type="button" className="admin-subs__inspect-btn" onClick={() => setSelectedSubmission(null)}>Close</button>
-              {drawerView === 'inspect' && (
-                <button type="button" className="admin-subs__approve-btn" onClick={() => approveSubmission(selectedSubmission)}>Quick Approve (demo)</button>
+              {drawerView === 'inspect' && selectedSubmission.queue !== 'approved' && (
+                <button type="button" className="admin-subs__approve-btn" disabled={!accountId} onClick={() => void castCurrentVote(selectedSubmission)}>
+                  Record {selectedSubmission.queue === 'pending' ? 'admin' : 'client'} vote
+                </button>
               )}
             </footer>
           </section>

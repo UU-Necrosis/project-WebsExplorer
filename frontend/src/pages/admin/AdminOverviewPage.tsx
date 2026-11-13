@@ -1,25 +1,68 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { DEMO_SUBMISSIONS } from '../../context/WebsList'
-import { KPI_DATA, NODES } from '../../context/AdminDemoData'
+import { ADMIN_VOTE_THRESHOLD, CLIENT_VOTE_THRESHOLD, DEMO_SUBMISSIONS, getSubmissionQueue } from '../../context/ClientSubmit'
+import { nodesApi, type ApiNode } from '../../services/api'
 import './css/AdminOverviewPage.css'
 
+const QUEUED_SUBMISSIONS = DEMO_SUBMISSIONS.filter((submission) => {
+  const queue = getSubmissionQueue(submission)
+  return queue === 'pending' || queue === 'audit'
+})
+const PENDING_SUBMISSIONS = QUEUED_SUBMISSIONS.filter((submission) => getSubmissionQueue(submission) === 'pending')
+const AUDIT_SUBMISSIONS = QUEUED_SUBMISSIONS.filter((submission) => getSubmissionQueue(submission) === 'audit')
+const categories = new Set(DEMO_SUBMISSIONS.flatMap((submission) => submission.categories))
 
-const SUBMISSIONS = DEMO_SUBMISSIONS.filter((submission) => submission.queue).slice(0, 5).map((submission) => {
-  const voteCount = new Set((submission.voters ?? []).map((vote) => vote.id)).size
+function getAdminVoteProgress(submissions: typeof PENDING_SUBMISSIONS): number {
+  if (!submissions.length) return 0
+  const votes = submissions.reduce((total, submission) => total + Math.min(submission.adminVotes.length, ADMIN_VOTE_THRESHOLD), 0)
+  return Math.round((votes / (submissions.length * ADMIN_VOTE_THRESHOLD)) * 100)
+}
+
+function getClientVoteProgress(submissions: typeof AUDIT_SUBMISSIONS): number {
+  if (!submissions.length) return 0
+  const votes = submissions.reduce((total, submission) => total + Math.min(submission.clientVotes.length, CLIENT_VOTE_THRESHOLD), 0)
+  return Math.round((votes / (submissions.length * CLIENT_VOTE_THRESHOLD)) * 100)
+}
+
+const KPI_DATA = [
+  { label: 'Directory Websites', value: String(DEMO_SUBMISSIONS.length), unit: 'websites', meta: `${categories.size} categories`, status: 'Sample data', pct: 100, icon: 'language' },
+  { label: 'Pending Review', value: String(PENDING_SUBMISSIONS.length), unit: 'in queue', meta: `${getAdminVoteProgress(PENDING_SUBMISSIONS)}% of admin vote slots filled`, status: 'Sample data', pct: getAdminVoteProgress(PENDING_SUBMISSIONS), icon: 'inbox' },
+  { label: 'Community Audit', value: String(AUDIT_SUBMISSIONS.length), unit: 'submissions', meta: `${getClientVoteProgress(AUDIT_SUBMISSIONS)}% of client vote slots filled`, status: 'Sample data', pct: getClientVoteProgress(AUDIT_SUBMISSIONS), icon: 'groups' },
+  { label: 'Client Votes', value: String(AUDIT_SUBMISSIONS.reduce((total, submission) => total + Math.min(submission.clientVotes.length, CLIENT_VOTE_THRESHOLD), 0)), unit: 'votes', meta: `Across ${AUDIT_SUBMISSIONS.length} audit websites`, status: `${getClientVoteProgress(AUDIT_SUBMISSIONS)}% quorum`, pct: getClientVoteProgress(AUDIT_SUBMISSIONS), icon: 'how_to_vote' },
+]
+
+const SUBMISSIONS = PENDING_SUBMISSIONS.slice(0, 5).map((submission) => {
+  const voteCount = Math.min(submission.adminVotes.length, ADMIN_VOTE_THRESHOLD)
   const submittedAt = new Intl.DateTimeFormat('en-US', {
     month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'UTC',
   }).format(new Date(submission.submittedAt))
 
   return {
     ...submission,
-    status: voteCount === 0 ? 'crimson' : voteCount >= 4 ? 'amber' : 'coral',
-    statusLabel: `In Consensus (${voteCount}/5)`,
+    status: voteCount === 0 ? 'crimson' : 'coral',
+    statusLabel: `Admin votes (${voteCount}/${ADMIN_VOTE_THRESHOLD})`,
     submittedAt: `${submittedAt} UTC`,
   }
 })
 
 export default function AdminOverviewPage() {
   const navigate = useNavigate()
+  const [nodes, setNodes] = useState<ApiNode[]>([])
+  const [nodesError, setNodesError] = useState('')
+
+  useEffect(() => {
+    let active = true
+    nodesApi.list()
+      .then((items) => {
+        if (active) setNodes(items)
+      })
+      .catch((error: unknown) => {
+        if (active) setNodesError(error instanceof Error ? error.message : 'Unable to load cluster nodes.')
+      })
+    return () => { active = false }
+  }, [])
+
+  const onlineNodeCount = nodes.filter((node) => node.status === 'online').length
 
   return (
     <div className="admin-overview">
@@ -100,8 +143,8 @@ export default function AdminOverviewPage() {
       {/* Two-column section */}
       <div className="admin-overview__cols">
 
-        {/* Left — submissions table + chart */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        {/* Traffic chart */}
+        <div className="admin-overview__primary">
 
           {/* Chart card */}
           <div className="admin-overview__card">
@@ -150,7 +193,7 @@ export default function AdminOverviewPage() {
             <div className="admin-overview__card-hd">
               <div className="admin-overview__card-title">
                 Priority Submissions Requiring Attention
-                <span className="admin-overview__badge--queued">4 QUEUED</span>
+                <span className="admin-overview__badge--queued">{PENDING_SUBMISSIONS.length} PENDING</span>
               </div>
               <button className="admin-overview__card-link" onClick={() => navigate('/admin/submissions')}>
                 Open Queue <span className="material-symbols-outlined">arrow_forward</span>
@@ -189,26 +232,31 @@ export default function AdminOverviewPage() {
           </div>
         </div>
 
-        {/* Right — cluster quorum */}
-        <div>
+        {/* Cluster quorum */}
+        <div className="admin-overview__quorum">
           <div className="admin-overview__card">
             <div className="admin-overview__quorum-hd">
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span className="material-symbols-outlined" style={{ color: '#059669', fontSize: 20 }}>hub</span>
                 <span className="admin-overview__card-title">Cluster Quorum</span>
               </div>
-              <span className="admin-overview__quorum-badge">5/5 SGX ONLINE</span>
+              <span className="admin-overview__quorum-badge">
+                {nodes.length ? `${onlineNodeCount}/${nodes.length} NODES ONLINE` : 'NO NODES REGISTERED'}
+              </span>
             </div>
-            {NODES.map((n) => (
-              <div key={n.name} className="admin-overview__node-row">
-                <div className="admin-overview__node-left">
-                  <span className="admin-overview__node-dot" />
-                  <span className="admin-overview__node-name">{n.name}</span>
-                  <span className="admin-overview__node-region">({n.region})</span>
+            <div className="admin-overview__nodes-list" tabIndex={0} aria-label="Cluster quorum nodes">
+              {nodes.map((node) => (
+                <div key={node.id} className="admin-overview__node-row">
+                  <div className="admin-overview__node-left">
+                    <span className="admin-overview__node-dot" style={{ background: node.status === 'online' ? '#10b981' : node.status === 'maintenance' ? '#f59e0b' : '#ef4444' }} />
+                    <span className="admin-overview__node-name">{node.name}</span>
+                    <span className="admin-overview__node-region">({node.region})</span>
+                  </div>
+                  <span className="admin-overview__node-ms">{node.latencyMs === null ? node.status : `${node.latencyMs}ms`}</span>
                 </div>
-                <span className="admin-overview__node-ms">{n.ms}</span>
-              </div>
-            ))}
+              ))}
+              {!nodes.length && <span className="admin-overview__node-name">{nodesError || 'Add registered nodes to the cluster_nodes table.'}</span>}
+            </div>
           </div>
         </div>
       </div>

@@ -107,13 +107,22 @@
 
 /* Two-column layout */
 .admin-overview__cols {
-  display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.5rem;
+  display: grid; grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "traffic" "quorum" "submissions";
+  gap: 1.5rem;
   min-width: 0;
 }
 @media (min-width: 1024px) {
-  .admin-overview__cols { grid-template-columns: minmax(0, 7fr) minmax(18rem, 5fr); }
+  .admin-overview__cols {
+    grid-template-columns: minmax(0, 7fr) minmax(18rem, 5fr);
+    grid-template-areas: "traffic quorum" "submissions submissions";
+  }
 }
 .admin-overview__cols > * { min-width: 0; }
+.admin-overview__primary { display: contents; }
+.admin-overview__primary > .admin-overview__card:first-child { grid-area: traffic; }
+.admin-overview__primary > .admin-overview__card:last-child { grid-area: submissions; }
+.admin-overview__quorum { grid-area: quorum; min-width: 0; }
 
 /* Cards */
 .admin-overview__card {
@@ -186,6 +195,8 @@
   display: flex; align-items: center; justify-content: space-between;
   padding: 0.625rem 1.25rem; font-size: 0.75rem; border-top: 1px solid #f8fafc;
 }
+.admin-overview__nodes-list { max-height: 15rem; overflow-y: auto; overscroll-behavior: contain; }
+.admin-overview__nodes-list:focus-visible { outline: 2px solid #059669; outline-offset: -2px; }
 .admin-overview__node-left { display: flex; align-items: center; gap: 0.5rem; }
 .admin-overview__node-dot { width: 8px; height: 8px; border-radius: 9999px; background: #22c55e; }
 .admin-overview__node-name { font-family: 'JetBrains Mono', monospace; font-weight: 500; color: #0f172a; }

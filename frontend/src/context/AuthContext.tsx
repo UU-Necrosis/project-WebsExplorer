@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 // ── Demo account (for local testing only) ────────────────────
 // Remove / replace this with a real API call once the backend is ready.
 const DEMO_ACCOUNTS = [
-  {id: '1', name: 'reviewer-01', status:''/*online or offline*/,email: 'test@gmail.com', password: '123456' },
+  {id: '1', name: 'admin', status:'',email: 'test@gmail.com', password: '123456' },
   {id: '2', name: 'reviewer-02', status:'', email: 'test2@gmail.com', password: '123456' },
   {id: '3', name: 'reviewer-03', status:'', email: 'test3@gmail.com', password: '123456' },
   {id: '4', name: 'reviewer-04', status:'', email: 'test4@gmail.com', password: '123456' },
