@@ -16,4 +16,7 @@ export class User {
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  lastSubmissionAt: Date | null;
 }

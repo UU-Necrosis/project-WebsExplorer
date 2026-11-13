@@ -1,10 +1,10 @@
 :root {
-  --submit-bg: #0b1017;
+  --submit-bg: #090e15;
   --submit-surface: #111827;
   --submit-surface-soft: #171f2d;
   --submit-card: rgba(17, 24, 39, 0.78);
   --submit-panel: rgba(15, 23, 42, 0.8);
-  --submit-border: rgba(148, 163, 184, 0.18);
+  --submit-border: rgba(148, 163, 184, 0.14);
   --submit-text: #e5edf7;
   --submit-muted: #9aa9bb;
   --submit-primary: #4edf9f;
@@ -26,7 +26,7 @@
 .user-submit__shell {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem 1rem 4rem;
+  padding: 2rem 1rem 3rem;
 }
 
 .user-submit__header {
@@ -79,10 +79,23 @@
 
 .user-submit__form,
 .user-submit__panel {
-  background: rgba(17, 24, 39, 0.7);
+  background: rgba(17, 24, 39, 0.72);
   border: 1px solid var(--submit-border);
   border-radius: 1.4rem;
   box-shadow: 0 20px 45px rgba(4, 10, 18, 0.28);
+}
+
+.user-submit__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding: 1.1rem 1.2rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+  color: var(--submit-muted);
+  background: rgba(8, 12, 18, 0.8);
+  border-radius: 0.9rem;
 }
 
 .user-submit__form {
@@ -562,6 +575,47 @@
   transform: translateY(-1px);
 }
 
+.user-submit__locked-state {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 2rem;
+  text-align: center;
+  background:
+    radial-gradient(circle at top left, rgba(78, 223, 159, 0.16), transparent 32%),
+    rgba(9, 14, 21, 1);
+  color: #e2e8f0;
+}
+
+.user-submit__locked-title {
+  margin: 0;
+  color: #0f172a;
+}
+
+.user-submit__locked-copy {
+  margin: 0;
+  color: #475569;
+}
+
+.user-submit__locked-button {
+  background: #0f172a;
+  color: #fff;
+  border: none;
+  border-radius: 0.7rem;
+  padding: 0.8rem 1.25rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.user-submit__locked-button:hover {
+  transform: translateY(-1px);
+  opacity: 0.96;
+}
+
 @media (max-width: 940px) {
   .user-submit__layout {
     grid-template-columns: 1fr;
@@ -592,5 +646,75 @@
   .user-submit__panel,
   .user-submit__form {
     padding: 1rem;
+  }
+}
+
+.user-submit__cooldown-note {
+  margin: 1rem 0 0;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 0.9rem;
+  background: rgba(245, 158, 11, 0.08);
+  color: #fbbf24;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.user-submit__submit-message {
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(78, 223, 159, 0.28);
+  border-radius: 0.9rem;
+  background: rgba(0, 182, 122, 0.08);
+  color: var(--submit-primary);
+}
+
+.user-submit__submit-message--error {
+  border-color: rgba(255, 138, 128, 0.35);
+  background: rgba(239, 68, 68, 0.08);
+  color: var(--submit-error);
+}
+
+.user-submit__submit-message p {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.user-submit__submit-message button {
+  margin-top: 0.7rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.user-submit__submit:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.user-submit__voting-link {
+  color: var(--submit-primary);
+  font-weight: 700;
+  text-align: right;
+  text-decoration: none;
+}
+
+.user-submit__voting-link:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+  .user-submit__queue {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .user-submit__voting-link {
+    text-align: left;
   }
 }

@@ -1,9 +1,12 @@
 import { useAuth } from '../../context/AuthContext'
-import GuestHomePage from './Guest pages/GuestHomePage'
-import UserHomePage from './User pages/UserHomePage'
+import GuestLayout from '../../layout/GuestLayout'
+import GuestHomePage from './guest-pages/GuestHomePage'
+import UserHomePage from './user-pages/UserHomePage'
 
 export default function ClientHomePage() {
-  const { isLoggedIn } = useAuth()
+  const { isUserLoggedIn } = useAuth()
 
-  return isLoggedIn ? <UserHomePage /> : <GuestHomePage />
+  return isUserLoggedIn
+    ? <UserHomePage />
+    : <GuestLayout><GuestHomePage /></GuestLayout>
 }

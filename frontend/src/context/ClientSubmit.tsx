@@ -4,8 +4,8 @@ export interface ClientSubmission {
 	hash: string
 	submittedBy: string
 	submittedAt: string
-	adminVotes: number[]
-	clientVotes: number[]
+	adminVotes: (number | string)[]
+	clientVotes: (number | string)[]
 	url: string
 	status: 'Hidden' | 'Visible'
 	appearance: string
@@ -14,6 +14,12 @@ export interface ClientSubmission {
 	tags: string[]
 	username: string
 	role: string
+	relationship?: 'user' | 'creator' | 'curator'
+	contactEmail?: string | null
+	rating?: number | null
+	logoInitials?: string
+	ownershipAuthorized?: boolean
+	canVerifyConnection?: boolean
 }
 
 export type SubmissionQueue = 'pending' | 'audit' | 'approved'

@@ -1,3 +1,5 @@
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../../../context/AuthContext'
 import './css/UserHomePage.css'
 
 const trendingTopics = ['Generative AI', 'Web Comics', 'Dev Tools', 'Design & UI', 'Media']
@@ -22,14 +24,24 @@ const newSites = [
 ]
 
 export default function UserHomePage() {
+  const { customerUser, logoutCustomer } = useAuth()
+  const navigate = useNavigate()
+
+  function handleLogout() {
+    logoutCustomer()
+    navigate('/', { replace: true })
+  }
+
   return (
     <div className="user-home" data-theme="client">
       <div className="user-home__shell">
         <header className="user-home__header">
-          <a className="user-home__brand" href="/" aria-label="WebExplorer home">
-            <span className="user-home__brand-mark">W</span>
-            <span className="user-home__brand-name">Web<span>Explorer</span></span>
-          </a>
+          <div className="user-home__header-left">
+            <a className="user-home__brand" href="/" aria-label="WebExplorer home">
+              <span className="user-home__brand-mark">W</span>
+              <span className="user-home__brand-name">Web<span>Explorer</span></span>
+            </a>
+          </div>
 
           <nav className="user-home__nav" aria-label="Main navigation">
             <a className="user-home__nav-active" href="discover">Discover</a>
@@ -38,17 +50,25 @@ export default function UserHomePage() {
           </nav>
 
           <div className="user-home__header-actions">
-            <a className="user-home__saved-link" href="saved">
-              <span className="material-symbols-outlined" aria-hidden="true">bookmark</span>
-              Saved
-            </a>
-            <a className="user-home__submit-link" href="submit">
-              <span className="material-symbols-outlined" aria-hidden="true">add</span>
-              Submit a site
-            </a>
-            <button type="button" className="user-home__account" aria-label="Account menu">
-              <span className="material-symbols-outlined" aria-hidden="true">person</span>
-            </button>
+            <details className="user-home__profile-menu">
+              <summary className="user-home__account-pill" aria-label="Open profile menu">
+                <span className="material-symbols-outlined" aria-hidden="true">person</span>
+                <span>Profile</span>
+                <span className="material-symbols-outlined user-home__profile-chevron" aria-hidden="true">expand_more</span>
+              </summary>
+              <div className="user-home__profile-dropdown">
+                <div className="user-home__profile-summary">
+                  <strong>{customerUser?.name || 'Account'}</strong>
+                  {customerUser?.email && <span>{customerUser.email}</span>}
+                </div>
+                <Link to="/profile">Your profile</Link>
+                <Link to="/submit">Submit a website</Link>
+                <button type="button" onClick={handleLogout}>
+                  <span className="material-symbols-outlined" aria-hidden="true">logout</span>
+                  Log out
+                </button>
+              </div>
+            </details>
           </div>
         </header>
 
@@ -160,9 +180,42 @@ export default function UserHomePage() {
               <h2>Put a great website on the map.</h2>
               <p>Share it with the community and help someone else find their next favorite.</p>
             </div>
-            <a href="#submit" className="user-home__submit-button"><span className="material-symbols-outlined" aria-hidden="true">add</span> Submit a website</a>
+            <Link to="/submit" className="user-home__submit-button"><span className="material-symbols-outlined" aria-hidden="true">add</span> Submit a website</Link>
           </section>
         </main>
+
+        <footer className="user-layout__footer">
+          <div className="user-layout__footer-brand-group">
+            <span className="user-layout__footer-brand">Web Explorer</span>
+            <p>Discover and compare digital experiences with trusted, verified listings.</p>
+          </div>
+
+          <div className="user-layout__footer-links">
+            <div>
+              <span>Explore</span>
+              <a href="/home">Home</a>
+              <a href="/discover">Discover</a>
+              <a href="/categories">Categories</a>
+            </div>
+            <div>
+              <span>Account</span>
+              <a href="/profile">Profile</a>
+              <Link to="/submit">Submit</Link>
+              <a href="/saved">Saved</a>
+            </div>
+            <div>
+              <span>Support</span>
+              <a href="/guest">Help</a>
+              <a href="/guest">Privacy</a>
+              <a href="/guest">Terms</a>
+            </div>
+          </div>
+
+          <div className="user-layout__footer-meta">
+            <span>© 2026 Web Explorer</span>
+            <span>Trusted discovery</span>
+          </div>
+        </footer>
       </div>
     </div>
   )

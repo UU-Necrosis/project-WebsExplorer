@@ -1,7 +1,8 @@
 ﻿import { useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../../context/AuthContext'
 import { useClientSubmissions } from '../../../context/ClientSubmissionStore'
+import UserSubmitLayout from '../../../layout/UserSubmitLayout'
 import './css/UserSubmitWeb.css'
 
 const categories = ['AI & ML', 'Dev Tools', 'Design & UI', 'SaaS & Cloud', 'Media & Audio']
@@ -9,19 +10,24 @@ const tags = ['#developer-tools', '#selfhosted', '#freemium']
 
 export default function UserSubmitWeb() {
   const navigate = useNavigate()
-  const { isLoggedIn } = useAuth()
-  const { addSubmission } = useClientSubmissions()
-  const [relationship, setRelationship] = useState('creator')
+  const { isUserLoggedIn } = useAuth()
+  const { addSubmission, submissionCooldown } = useClientSubmissions()
+  const [relationship, setRelationship] = useState<'user' | 'creator' | 'curator'>('user')
   const [rating, setRating] = useState('5')
   const [categoryItems, setCategoryItems] = useState(categories)
   const [tagItems, setTagItems] = useState(tags)
-  const [selectedCategories, setSelectedCategories] = useState(categories.slice(0, 3))
-  const [selectedTags, setSelectedTags] = useState(tags)
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([])
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [siteName, setSiteName] = useState('')
+  const [siteTagline, setSiteTagline] = useState('')
+  const [logoInitials, setLogoInitials] = useState('')
   const [isAddingCategory, setIsAddingCategory] = useState(false)
   const [isAddingTag, setIsAddingTag] = useState(false)
   const [newCategory, setNewCategory] = useState('')
   const [newTag, setNewTag] = useState('')
   const [submitMessage, setSubmitMessage] = useState('')
+  const [submitMessageType, setSubmitMessageType] = useState<'success' | 'error'>('success')
+  const [submittedName, setSubmittedName] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const ratingDescriptions: Record<string, string> = {
@@ -65,32 +71,15 @@ export default function UserSubmitWeb() {
     addTag()
   }
 
-  if (!isLoggedIn) {
+  if (!isUserLoggedIn) {
     return (
-      <div style={{
-        minHeight: '60vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexDirection: 'column',
-        gap: '1rem',
-        padding: '2rem',
-        textAlign: 'center',
-      }}>
-        <h2 style={{ margin: 0, color: '#0f172a' }}>Please log in to submit a website</h2>
-        <p style={{ margin: 0, color: '#475569' }}>Create a customer account or sign in to continue.</p>
+      <div className="user-submit__locked-state">
+        <h2 className="user-submit__locked-title">Please log in to submit a website</h2>
+        <p className="user-submit__locked-copy">Create a customer account or sign in to continue.</p>
         <button
           type="button"
+          className="user-submit__locked-button"
           onClick={() => navigate('/guest-login')}
-          style={{
-            background: '#0f172a',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '0.7rem',
-            padding: '0.8rem 1.25rem',
-            fontWeight: 700,
-            cursor: 'pointer',
-          }}
         >
           Go to login
         </button>
@@ -102,25 +91,36 @@ export default function UserSubmitWeb() {
     event.preventDefault()
     const formData = new FormData(event.currentTarget)
     const fieldValue = (name: string) => String(formData.get(name) ?? '').trim()
-    const contactEmail = fieldValue('contact-email')
+    const ratingValue = fieldValue('rating')
+    if (selectedCategories.length === 0) {
+      setSubmitMessageType('error')
+      setSubmitMessage('Select at least one category before submitting.')
+      return
+    }
 
     setIsSubmitting(true)
     setSubmitMessage('')
+    setSubmittedName('')
     try {
-      await addSubmission({
+      const result = await addSubmission({
         name: fieldValue('site-name'),
         url: fieldValue('site-url'),
-        submittedBy: contactEmail || 'community-member',
-        status: 'Hidden',
         appearance: fieldValue('site-tagline'),
         description: fieldValue('description'),
         categories: selectedCategories,
         tags: selectedTags,
-        username: contactEmail || 'community-member',
-        role: relationship === 'creator' ? 'Owner' : 'Community',
+        relationship,
+        contactEmail: fieldValue('contact-email') || null,
+        rating: ratingValue ? Number(ratingValue) : null,
+        logoInitials: fieldValue('site-monogram'),
+        ownershipAuthorized: formData.get('ownership-authorized') === 'on',
+        canVerifyConnection: formData.get('can-verify-connection') === 'on',
       })
-      setSubmitMessage('Website submitted for review.')
+      setSubmittedName(result.duplicate ? '' : fieldValue('site-name'))
+      setSubmitMessageType(result.voteAdded === false ? 'error' : 'success')
+      setSubmitMessage(result.message ?? 'Submission saved and added to the admin review queue.')
     } catch (error) {
+      setSubmitMessageType('error')
       setSubmitMessage(error instanceof Error ? error.message : 'Submission failed. Please try again.')
     } finally {
       setIsSubmitting(false)
@@ -128,21 +128,9 @@ export default function UserSubmitWeb() {
   }
 
   return (
-    <div className="user-submit">
-      <div className="user-submit__shell">
-        <header className="user-submit__header">
-          <div className="user-submit__eyebrow">Community submission • open for all</div>
-          <h1>
-            Suggest a <span>New Website</span>
-          </h1>
-          <p>
-            Found a hidden gem, indie tool, or game-changing web app? Share it with
-            the community and help members discover something worth bookmarking.
-          </p>
-        </header>
-
-        <div className="user-submit__layout">
-          <form className="user-submit__form" onSubmit={handleSubmit}>
+    <UserSubmitLayout>
+      <div className="user-submit__layout">
+        <form className="user-submit__form" onSubmit={handleSubmit}>
             <section className="user-submit__section">
               <div className="user-submit__section-head">
                 <div className="user-submit__section-title">
@@ -157,19 +145,35 @@ export default function UserSubmitWeb() {
                   <label htmlFor="site-url">
                     Website link <span className="user-submit__required">*</span>
                   </label>
-                  <input id="site-url" name="site-url" type="url" defaultValue="https://example.com" />
+                  <input id="site-url" name="site-url" type="url" placeholder="https://example.com" maxLength={2048} required />
                 </div>
 
                 <div className="user-submit__field">
                   <label htmlFor="site-name">
                     Website name <span className="user-submit__required">*</span>
                   </label>
-                  <input id="site-name" name="site-name" type="text" defaultValue="Latent Space Engine" />
+                  <input
+                    id="site-name"
+                    name="site-name"
+                    type="text"
+                    value={siteName}
+                    onChange={(event) => setSiteName(event.target.value)}
+                    maxLength={180}
+                    required
+                  />
                 </div>
 
                 <div className="user-submit__field">
                   <label htmlFor="site-monogram">Logo initials</label>
-                  <input id="site-monogram" type="text" defaultValue="LSE" />
+                  <input
+                    id="site-monogram"
+                    name="site-monogram"
+                    type="text"
+                    value={logoInitials}
+                    onChange={(event) => setLogoInitials(event.target.value.slice(0, 16))}
+                    maxLength={16}
+                    placeholder="Optional"
+                  />
                 </div>
 
                 <div className="user-submit__field user-submit__field--full">
@@ -180,7 +184,10 @@ export default function UserSubmitWeb() {
                     id="site-tagline"
                     name="site-tagline"
                     type="text"
-                    defaultValue="Autonomous vector synthesis and diffusion exploration sandbox"
+                    value={siteTagline}
+                    onChange={(event) => setSiteTagline(event.target.value)}
+                    maxLength={255}
+                    required
                   />
                 </div>
               </div>
@@ -340,8 +347,9 @@ export default function UserSubmitWeb() {
                   <label htmlFor="relationship">Relationship to this website</label>
                     <select
                       id="relationship"
+                      name="relationship"
                       value={relationship}
-                      onChange={(event) => setRelationship(event.target.value)}
+                      onChange={(event) => setRelationship(event.target.value as typeof relationship)}
                     >
                     <option value="user">I use this site</option>
                     <option value="creator">I made this</option>
@@ -361,6 +369,7 @@ export default function UserSubmitWeb() {
                         type="email"
                         autoComplete="email"
                         placeholder="you@example.com"
+                        maxLength={255}
                         required
                       />
                       <small className="user-submit__field-hint">
@@ -372,13 +381,13 @@ export default function UserSubmitWeb() {
                       <legend>Ownership verification</legend>
                       <div>
                         <label className="user-submit__check">
-                          <input type="checkbox" required />
+                          <input name="ownership-authorized" type="checkbox" required />
                           <span> I own this website or am authorized to submit it.</span>
                         </label>
                       </div>
                       <div>
                         <label className="user-submit__check">
-                          <input type="checkbox" required />
+                          <input name="can-verify-connection" type="checkbox" required />
                           <span> I can verify my connection if the review team requests it.</span>
                         </label>
                       </div>
@@ -389,6 +398,7 @@ export default function UserSubmitWeb() {
                     <label htmlFor="rating">Your rating</label>
                     <select
                       id="rating"
+                      name="rating"
                       value={rating}
                       onChange={(event) => setRating(event.target.value)}
                       aria-describedby="rating-description"
@@ -422,12 +432,28 @@ export default function UserSubmitWeb() {
                 <textarea
                   id="description"
                   name="description"
-                  defaultValue="Latent Space Engine connects heterogeneous diffusion checkpoints with zero latency via local WebGPU shaders. It helps teams explore semantic latent space, compare models, and fine-tune parameters without needing expensive infrastructure."
+                  required
                 />
               </div>
             </section>
 
-            {submitMessage && <p className="user-submit__submit-message" role="status">{submitMessage}</p>}
+            {submissionCooldown && !submissionCooldown.canSubmit && submissionCooldown.availableAt && (
+              <p className="user-submit__cooldown-note">
+                You can submit a new website after {new Date(submissionCooldown.availableAt).toLocaleString()}.
+                If this URL is already in progress, submitting it here adds your customer vote to that submission.
+              </p>
+            )}
+
+            {submitMessage && (
+              <div className={`user-submit__submit-message user-submit__submit-message--${submitMessageType}`} role={submitMessageType === 'error' ? 'alert' : 'status'}>
+                <p>{submitMessage}</p>
+                {submittedName && (
+                  <button type="button" onClick={() => navigate('/profile')}>
+                    View {submittedName} in your profile
+                  </button>
+                )}
+              </div>
+            )}
             <button type="submit" className="user-submit__submit" disabled={isSubmitting}>
               {isSubmitting ? 'Submitting…' : 'Submit website for review →'}
             </button>
@@ -441,10 +467,10 @@ export default function UserSubmitWeb() {
               </div>
 
               <div className="user-submit__preview-card">
-                <div className="user-submit__logo">LSE</div>
+                <div className="user-submit__logo">{logoInitials || siteName.slice(0, 3).toUpperCase() || 'WEB'}</div>
                 <div className="user-submit__preview-copy">
-                  <strong>Latent Space Engine</strong>
-                  <span>Autonomous vector synthesis and diffusion exploration sandbox</span>
+                  <strong>{siteName || 'Your website name'}</strong>
+                  <span>{siteTagline || 'A short description will appear here.'}</span>
                 </div>
               </div>
 
@@ -482,18 +508,14 @@ export default function UserSubmitWeb() {
                 </div>
                 <div>
                   <small>Current queue</small>
-                  <strong>14 websites in review</strong>
+                  <strong>5 admin votes → 3 customer votes</strong>
                 </div>
               </div>
 
-              <div className="user-submit__queue-time">
-                <strong>~15 min</strong>
-                <small>avg wait</small>
-              </div>
+              <Link className="user-submit__voting-link" to="/new-websites">Vote on new websites →</Link>
             </div>
           </aside>
         </div>
-      </div>
-    </div>
+    </UserSubmitLayout>
   )
 }

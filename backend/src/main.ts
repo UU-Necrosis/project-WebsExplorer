@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs';
 import { NestFactory } from '@nestjs/core';
 
 async function bootstrap() {
+  if (existsSync('.env.local')) process.loadEnvFile('.env.local');
   if (existsSync('.env')) process.loadEnvFile('.env');
   const { AppModule } = await import('./app.module.js');
   const app = await NestFactory.create(AppModule);

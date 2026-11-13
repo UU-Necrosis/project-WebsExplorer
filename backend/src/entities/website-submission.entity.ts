@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import { Column, Entity, Index, PrimaryColumn } from 'typeorm';
 
 @Entity({ name: 'website_submissions' })
 export class WebsiteSubmission {
@@ -17,14 +17,21 @@ export class WebsiteSubmission {
   @Column({ type: 'varchar', length: 255 })
   submittedBy: string;
 
+  @Column({ type: 'varchar', length: 36, nullable: true })
+  submitterId: string | null;
+
+  @Index('IDX_website_submissions_canonical_url', { unique: true })
+  @Column({ type: 'varchar', length: 2048, nullable: true })
+  canonicalUrl: string | null;
+
   @Column({ type: 'timestamptz' })
   submittedAt: Date;
 
   @Column({ type: 'json' })
-  adminVotes: number[];
+  adminVotes: (number | string)[];
 
   @Column({ type: 'json' })
-  clientVotes: number[];
+  clientVotes: (number | string)[];
 
   @Column({ type: 'varchar', length: 2048 })
   url: string;
@@ -49,4 +56,22 @@ export class WebsiteSubmission {
 
   @Column({ type: 'varchar', length: 80 })
   role: string;
+
+  @Column({ type: 'varchar', length: 24, default: 'curator' })
+  relationship: 'user' | 'creator' | 'curator';
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  contactEmail: string | null;
+
+  @Column({ type: 'integer', nullable: true })
+  rating: number | null;
+
+  @Column({ type: 'varchar', length: 16, default: '' })
+  logoInitials: string;
+
+  @Column({ type: 'boolean', default: false })
+  ownershipAuthorized: boolean;
+
+  @Column({ type: 'boolean', default: false })
+  canVerifyConnection: boolean;
 }

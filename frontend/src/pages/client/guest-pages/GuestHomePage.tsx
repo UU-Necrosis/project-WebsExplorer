@@ -212,6 +212,44 @@ export default function GuestHomePage() {
             </div>
           </div>
         </section>
+
+        <footer className="guest-home__footer">
+          <div className="guest-home__footer-top">
+            <div className="guest-home__footer-brand">
+              <div className="guest-home__brand-mark">W</div>
+              <div>
+                <div className="guest-home__brand-name">Web<span>Explorer</span></div>
+                <p>Trusted discovery for standout tools and websites.</p>
+              </div>
+            </div>
+
+            <div className="guest-home__footer-grid">
+              <div>
+                <span>Explore</span>
+                <a href="#explore">Categories</a>
+                <a href="#featured">Featured</a>
+                <a href="#recent">Reviews</a>
+              </div>
+              <div>
+                <span>Community</span>
+                <a href="#submit">Submit</a>
+                <a href="/guest">About</a>
+                <a href="/guest">Contact</a>
+              </div>
+              <div>
+                <span>Legal</span>
+                <a href="/guest">Privacy</a>
+                <a href="/guest">Terms</a>
+                <a href="/guest">Help</a>
+              </div>
+            </div>
+          </div>
+
+          <div className="guest-home__footer-bottom">
+            <span>© 2026 Web Explorer</span>
+            <span>Built for trusted discovery</span>
+          </div>
+        </footer>
       </main>
     </div>
   )

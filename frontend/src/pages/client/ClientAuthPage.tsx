@@ -1,5 +1,6 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 import { customerAuthApi } from '../../services/api'
 
 const styles = {
@@ -109,6 +110,7 @@ const styles = {
 
 export default function ClientAuthPage() {
   const navigate = useNavigate()
+  const { loginCustomer } = useAuth()
   const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [form, setForm] = useState({ name: '', email: '', password: '' })
   const [error, setError] = useState('')
@@ -129,9 +131,8 @@ export default function ClientAuthPage() {
         ? await customerAuthApi.signup(form)
         : await customerAuthApi.login(form)
 
-      localStorage.setItem('customer_token', result.token)
-      localStorage.setItem('customer_user', JSON.stringify(result.user))
-      navigate('/submit')
+      loginCustomer(result.token, result.user)
+      navigate('/home')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Authentication failed.')
     } finally {

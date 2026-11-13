@@ -1,124 +1,110 @@
+import { Link } from 'react-router-dom'
+import { useAuth } from '../../../../context/AuthContext'
+import { getSubmissionQueue, useClientSubmissions } from '../../../../context/ClientSubmissionStore'
 import './css/UserProfileHomePage.css'
 
-const savedSites = [
-  { name: 'Linear', category: 'Productivity', rating: '4.9' },
-  { name: 'Notion', category: 'Workspace', rating: '4.8' },
-  { name: 'Figma', category: 'Design', rating: '4.8' },
-]
+function formatDate(value: string) {
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? 'Date unavailable' : date.toLocaleDateString()
+}
 
-const activityFeed = [
-  'You saved 3 new sites this week',
-  'Your submission “Flow Studio” is under review',
-  '2 communities you follow published new recommendations',
-]
+function queueLabel(queue: ReturnType<typeof getSubmissionQueue>) {
+  if (queue === 'approved') return 'Approved'
+  if (queue === 'audit') return 'Community review'
+  return 'Pending admin review'
+}
 
-export default function UserHomePage() {
+export default function UserProfileHomePage() {
+  const { customerUser } = useAuth()
+  const { mySubmissions, mySubmissionsLoading, mySubmissionsError } = useClientSubmissions()
+  const firstName = customerUser?.name.trim().split(/\s+/)[0] || 'Member'
+
   return (
-    <div className="user-home" data-theme="client">
-      <div className="user-home__shell">
-        <header className="user-home__header">
-          <div className="user-home__brand">
-            <div className="user-home__brand-mark">W</div>
-            <div>
-            <span className="user-home__brand-name">Web<span>Explorer</span></span>
-              <div className="user-home__brand-tag">Member dashboard</div>
-            </div>
+    <div className="user-profile" data-theme="client">
+      <main className="user-profile__shell">
+        <header className="user-profile__header">
+          <div>
+            <p className="user-profile__eyebrow">Member profile</p>
+            <h1>Welcome back, {firstName}</h1>
+            <p className="user-profile__intro">Track the websites you have submitted and their progress through review.</p>
           </div>
-
-          <nav className="user-home__nav">
-            <a href="#discover">Discover</a>
-            <a href="#saved">Saved</a>
-            <a href="#submissions">My submissions</a>
-            <a href="#submit" className="user-home__nav-primary">Submit website</a>
-          </nav>
+          <Link className="user-profile__primary-link" to="/submit">Submit a website</Link>
         </header>
 
-        <main className="user-home__main">
-          <section className="user-home__welcome">
+        <section className="user-profile__account" aria-label="Account details">
+          <span className="user-profile__avatar" aria-hidden="true">{firstName.slice(0, 1).toUpperCase()}</span>
+          <div>
+            <strong>{customerUser?.name || 'Member account'}</strong>
+            <span>{customerUser?.email || 'Account details unavailable'}</span>
+          </div>
+          <div className="user-profile__account-badge">
+            <span className="material-symbols-outlined" aria-hidden="true">verified_user</span>
+            Customer account
+          </div>
+        </section>
+
+        <section className="user-profile__stats" aria-label="Submission summary">
+          <article className="user-profile__stat">
+            <span>Total submissions</span>
+            <strong>{mySubmissionsLoading ? '—' : mySubmissions.length}</strong>
+          </article>
+          <article className="user-profile__stat">
+            <span>In review</span>
+            <strong>{mySubmissionsLoading ? '—' : mySubmissions.filter((item) => getSubmissionQueue(item) !== 'approved').length}</strong>
+          </article>
+          <article className="user-profile__stat">
+            <span>Approved</span>
+            <strong>{mySubmissionsLoading ? '—' : mySubmissions.filter((item) => getSubmissionQueue(item) === 'approved').length}</strong>
+          </article>
+        </section>
+
+        <section className="user-profile__submissions" aria-labelledby="user-profile-submissions-title">
+          <div className="user-profile__section-heading">
             <div>
-              <div className="user-home__mini-label">Welcome back</div>
-              <h1>Hello, Alex.</h1>
-              <p>
-                Your personal feed is ready. Discover trending tools, revisit your saves, and keep submitting the best sites you find.
-              </p>
+              <p className="user-profile__eyebrow">Your activity</p>
+              <h2 id="user-profile-submissions-title">My submissions</h2>
             </div>
+            <Link to="/submit">New submission <span aria-hidden="true">→</span></Link>
+            <Link to="/new-websites">Vote on new websites</Link>
+          </div>
 
-            <div className="user-home__score">
-              <div className="user-home__mini-label">Member score</div>
-              <div className="user-home__score-value">94</div>
-              <div className="user-home__score-text">Trusted curator</div>
+          {mySubmissionsLoading ? (
+            <p className="user-profile__state" role="status">Loading your submissions…</p>
+          ) : mySubmissionsError ? (
+            <p className="user-profile__state user-profile__state--error" role="alert">{mySubmissionsError}</p>
+          ) : mySubmissions.length === 0 ? (
+            <div className="user-profile__empty">
+              <span className="material-symbols-outlined" aria-hidden="true">language</span>
+              <h3>No submissions yet</h3>
+              <p>Share a useful website and follow its review progress here.</p>
+              <Link to="/submit">Create your first submission</Link>
             </div>
-          </section>
-
-          <section className="user-home__content-grid">
-            <div className="user-home__panel">
-              <div className="user-home__panel-head">
-                <h2>Recommended for you</h2>
-                <a href="#discover">View all</a>
-              </div>
-
-              <div className="user-home__list">
-                {savedSites.map((site) => (
-                  <div key={site.name} className="user-home__list-item">
-                    <div className="user-home__site-meta">
-                      <div className="user-home__site-badge">{site.name.slice(0, 2).toUpperCase()}</div>
-                      <div>
-                        <div className="user-home__site-name">{site.name}</div>
-                        <div className="user-home__site-category">{site.category}</div>
-                      </div>
+          ) : (
+            <div className="user-profile__list">
+              {mySubmissions.map((submission) => {
+                const queue = getSubmissionQueue(submission)
+                return (
+                  <article className="user-profile__submission" key={submission.id}>
+                    <div className="user-profile__submission-mark" aria-hidden="true">
+                      {submission.logoInitials || submission.name.slice(0, 2).toUpperCase()}
                     </div>
-                    <div className="user-home__star-chip">
-                      <span className="material-symbols-outlined">star</span>
-                      {site.rating}
+                    <div className="user-profile__submission-copy">
+                      <h3>{submission.name}</h3>
+                      <a href={submission.url} target="_blank" rel="noopener noreferrer">{submission.url}</a>
+                      <p>{submission.appearance}</p>
+                      <span className="user-profile__submission-date">Submitted {formatDate(submission.submittedAt)}</span>
                     </div>
-                  </div>
-                ))}
-              </div>
+                    <div className={`user-profile__status user-profile__status--${queue}`} aria-label={`Status: ${queueLabel(queue)}`}>
+                      <span className="user-profile__status-dot" />
+                      {queueLabel(queue)}
+                    </div>
+                  </article>
+                )
+              })}
             </div>
-
-            <div className="user-home__panel">
-              <h2>Activity</h2>
-              <div className="user-home__activity">
-                {activityFeed.map((item) => (
-                  <div key={item} className="user-home__activity-item">
-                    <span className="user-home__activity-dot" />
-                    <span>{item}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          <section className="user-home__stats-grid" id="saved">
-            <div className="user-home__stat-card">
-              <div className="user-home__mini-label">Saved</div>
-              <div className="user-home__stat-value">18</div>
-              <div className="user-home__stat-caption">Curated websites</div>
-            </div>
-            <div className="user-home__stat-card">
-              <div className="user-home__mini-label">Submissions</div>
-              <div className="user-home__stat-value">6</div>
-              <div className="user-home__stat-caption">Approved this month</div>
-            </div>
-            <div className="user-home__stat-card">
-              <div className="user-home__mini-label">Communities</div>
-              <div className="user-home__stat-value">12</div>
-              <div className="user-home__stat-caption">Followed spaces</div>
-            </div>
-          </section>
-
-          <section className="user-home__cta" id="submit">
-            <div className="user-home__cta-panel">
-              <div className="user-home__mini-label">Member tools</div>
-              <h2>Submit something useful to the directory</h2>
-              <p>
-                Found a site worth sharing? Add it to the directory and help other members discover tools they actually need.
-              </p>
-              <button type="button" className="user-home__cta-button">New submission</button>
-            </div>
-          </section>
-        </main>
-      </div>
+          )}
+        </section>
+      </main>
     </div>
   )
 }

@@ -10,6 +10,12 @@ export interface ApiNode {
   status: 'online' | 'offline' | 'maintenance'
 }
 
+export interface SubmissionCooldown {
+  canSubmit: boolean
+  adminBypass: boolean
+  availableAt: string | null
+}
+
 const BASE = (import.meta.env.VITE_API_URL ?? 'http://localhost:3000').replace(/\/+$/, '')
 
 function authHeader(): Record<string, string> {
@@ -20,13 +26,15 @@ function authHeader(): Record<string, string> {
 }
 
 async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
+  const headers = new Headers(opts.headers)
+  if (!headers.has('Content-Type')) headers.set('Content-Type', 'application/json')
+  for (const [name, value] of Object.entries(authHeader())) headers.set(name, value)
+
   const res = await fetch(`${BASE}${path}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...authHeader(),
-      ...(opts.headers as Record<string, string>),
-    },
     ...opts,
+    headers: {
+      ...Object.fromEntries(headers.entries()),
+    },
   })
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))
@@ -36,10 +44,10 @@ async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
 }
 
 export const authApi = {
-  login: (email: string, password: string) =>
-    req<{ token: string }>('/api/auth/admin/login', {
+  login: (identifier: string, password: string) =>
+    req<{ token: string; accountId: number }>('/api/auth/admin/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ identifier, password }),
     }),
 }
 
@@ -55,7 +63,7 @@ export const customerAuthApi = {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
-  login: (payload: { email: string; password: string }) =>
+  login: (payload: { identifier?: string; email?: string; password: string }) =>
     req<{ token: string; user: CustomerUser }>('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify(payload),
@@ -64,14 +72,21 @@ export const customerAuthApi = {
 
 export const submissionsApi = {
   list: () => req<SubmissionRecord[]>('/api/submissions'),
-  create: (submission: NewClientSubmission) => req<SubmissionRecord>('/api/submissions', {
+  mine: () => req<SubmissionRecord[]>('/api/submissions/mine'),
+  clientVoting: () => req<SubmissionRecord[]>('/api/submissions/voting'),
+  cooldown: () => req<SubmissionCooldown>('/api/submissions/cooldown'),
+  create: (submission: NewClientSubmission) => req<SubmissionRecord & {
+    duplicate?: boolean
+    voteAdded?: boolean
+    message?: string
+  }>('/api/submissions', {
     method: 'POST',
     body: JSON.stringify(submission),
   }),
-  vote: (id: string, kind: 'admin' | 'client', voterId: number) =>
+  vote: (id: string, kind: 'admin' | 'client', voterId: number | string) =>
     req<SubmissionRecord>(`/api/submissions/${id}/votes/${kind}`, {
       method: 'POST',
-      body: JSON.stringify({ voterId }),
+      body: JSON.stringify(kind === 'admin' ? { voterId: Number(voterId) } : {}),
     }),
 }
 

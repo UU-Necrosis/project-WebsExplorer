@@ -11,7 +11,12 @@ export class AuthController {
   }
 
   @Post('login')
-  login(@Body() body: { email?: string; password?: string }) {
+  login(@Body() body: { identifier?: string; email?: string; password?: string }) {
     return this.authService.login(body);
+  }
+
+  @Post('admin/login')
+  loginAdmin(@Body() body: { identifier?: string; email?: string; password?: string }) {
+    return this.authService.loginAdmin(body);
   }
 }

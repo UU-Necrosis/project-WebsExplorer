@@ -1,10 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
-import { ClientSubmissionProvider } from './context/ClientSubmissionStore'
 
 // Layout
 import AdminLayout from './layout/AdminLayout'
-import ClientLayout from './pages/client/ClientLayout'
+import GuestLayout from './layout/GuestLayout'
+import UserLayout from './layout/UserLayout'
 
 // Admin pages
 import AdminLoginPage     from './pages/admin/AdminLoginPage'
@@ -15,33 +15,40 @@ import AdminAuditLogsPage from './pages/admin/security/AdminAuditLogsPage'
 
 // Client pages
 import ClientHomePage from './pages/client/ClientHomePage'
-import GuestHomePage from './pages/client/Guest pages/GuestHomePage'
-import GuestLoginPage from './pages/client/Guest pages/GuestLoginPage'
-import GuestSignupPage from './pages/client/Guest pages/GuestSignupPage'
-import UserHomePage from './pages/client/User pages/UserHomePage'
-import UserSubmitWeb from './pages/client/User pages/UserSubmitWeb'
-import UserProfileHomePage from './pages/client/User pages/profile/UserProfileHomePage'
+import GuestHomePage from './pages/client/guest-pages/GuestHomePage'
+import GuestLoginPage from './pages/client/guest-pages/GuestLoginPage'
+import GuestSignupPage from './pages/client/guest-pages/GuestSignupPage'
+import UserHomePage from './pages/client/user-pages/UserHomePage'
+import NewWebsitesPage from './pages/client/user-pages/NewWebsitesPage'
+import UserSubmitWeb from './pages/client/user-pages/UserSubmitWeb'
+import UserProfileHomePage from './pages/client/user-pages/profile/UserProfileHomePage'
 
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <ClientSubmissionProvider>
-          <Routes>
-          {/* ── Client pages ───────────────────────────── */}
-          <Route element={<ClientLayout />}>
-            <Route index element={<ClientHomePage />} />
-            <Route path="home" element={<ClientHomePage />} />
+        <Routes>
+          {/* The root page chooses its home view from the current auth state. */}
+          <Route path="/" element={<ClientHomePage />} />
+
+          {/* ── Guest pages ───────────────────────────── */}
+          <Route element={<GuestLayout />}>
             <Route path="discover" element={<GuestHomePage />} />
-            <Route path="categories" element={<UserHomePage />} />
-            <Route path="submit" element={<UserSubmitWeb />} />
-            <Route path="profile" element={<UserProfileHomePage />} />
             <Route path="guest" element={<GuestHomePage />} />
-            <Route path="user" element={<UserHomePage />} />
             <Route path="guest-login" element={<GuestLoginPage />} />
             <Route path="guest-signup" element={<GuestSignupPage />} />
             <Route path="login" element={<GuestLoginPage />} />
             <Route path="signup" element={<GuestSignupPage />} />
+          </Route>
+
+          {/* ── User pages ────────────────────────────── */}
+          <Route element={<UserLayout />}>
+            <Route path="home" element={<UserHomePage />} />
+            <Route path="categories" element={<UserHomePage />} />
+            <Route path="new-websites" element={<NewWebsitesPage />} />
+            <Route path="submit" element={<UserSubmitWeb />} />
+            <Route path="profile" element={<UserProfileHomePage />} />
+            <Route path="user" element={<UserHomePage />} />
           </Route>
 
           {/* ── Admin login (no sidebar) ───────────────── */}
@@ -60,10 +67,9 @@ export default function App() {
             <Route path="reports"  element={<ComingSoon title="Admin Reports" />} />
           </Route>
 
-          {/* ── Catch-all ──────────────────────────────── */}
-          <Route path="*" element={<Navigate to="/admin/login" replace />} />
-          </Routes>
-        </ClientSubmissionProvider>
+          {/* Unknown public routes return to the guest landing page. */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </AuthProvider>
     </BrowserRouter>
   )

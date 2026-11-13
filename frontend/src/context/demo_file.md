@@ -4,7 +4,7 @@ Scratch reference for organizing demo data found in `frontend/src/context` and t
 
 ## Reviewer Accounts
 
-Source: `AuthContext.tsx` (`DEMO_ACCOUNTS`). The same demo password is used by every account.
+Source: `AuthContext.tsx` (`DEMO_ACCOUNTS`). These records are for demo presence only; authentication is handled by the backend.
 
 | ID | Name | Email | Password | Current status field |
 | --- | --- | --- | --- | --- |

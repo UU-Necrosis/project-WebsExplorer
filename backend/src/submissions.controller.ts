@@ -1,7 +1,7 @@
-import { Body, Controller, Get, Param, Post, BadRequestException, Headers } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Param, Post, BadRequestException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { DirectoryService } from './directory.service';
-import type { CreateSubmissionInput, VoteKind } from './directory.service';
+import type { CreateSubmissionInput } from './directory.service';
 
 @Controller('api/submissions')
 export class SubmissionsController {
@@ -10,8 +10,27 @@ export class SubmissionsController {
     private readonly authService: AuthService,
   ) {}
 
+  @Get('mine')
+  listMySubmissions(@Headers('authorization') authorization: string | undefined) {
+    const user = this.authService.resolveCustomerFromHeader(authorization);
+    return this.directoryService.listSubmissionsForUser(user.id);
+  }
+
+  @Get('voting')
+  listSubmissionsForClientVoting(@Headers('authorization') authorization: string | undefined) {
+    const user = this.authService.resolveCustomerFromHeader(authorization);
+    return this.directoryService.listSubmissionsForClientVoting(user.id);
+  }
+
+  @Get('cooldown')
+  getSubmissionCooldown(@Headers('authorization') authorization: string | undefined) {
+    const user = this.authService.resolveFromHeader(authorization);
+    return this.directoryService.getSubmissionCooldown(user);
+  }
+
   @Get()
-  listSubmissions() {
+  listSubmissions(@Headers('authorization') authorization: string | undefined) {
+    this.authService.resolveAdminFromHeader(authorization);
     return this.directoryService.listSubmissions();
   }
 
@@ -29,14 +48,16 @@ export class SubmissionsController {
     @Param('id') id: string,
     @Param('kind') kind: string,
     @Body() body: { voterId?: number },
+    @Headers('authorization') authorization: string | undefined,
   ) {
     if (kind !== 'admin' && kind !== 'client') {
       throw new BadRequestException('Vote kind must be admin or client.');
     }
-    const voterId = Number(body?.voterId);
-    if (!Number.isInteger(voterId) || voterId < 1) {
-      throw new BadRequestException('A positive numeric voterId is required.');
+    if (kind === 'admin') {
+      const admin = this.authService.resolveAdminFromHeader(authorization);
+      return this.directoryService.recordVote(id, 'admin', admin.adminId);
     }
-    return this.directoryService.recordVote(id, kind as VoteKind, voterId);
+    const customer = this.authService.resolveCustomerFromHeader(authorization);
+    return this.directoryService.recordVote(id, 'client', customer.id);
   }
 }

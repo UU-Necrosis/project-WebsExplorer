@@ -65,17 +65,17 @@ export default function AdminSubmissionsPage() {
   const selectedVoteLimit = selectedSubmission?.queue === 'pending' ? ADMIN_VOTE_THRESHOLD : CLIENT_VOTE_THRESHOLD
   const selectedVoteLabel = selectedSubmission?.queue === 'pending' ? 'Admin votes' : 'Client votes'
   async function castCurrentVote(submission: Submission) {
+    if (submission.queue !== 'pending') return
     const voterId = Number(accountId)
     if (!Number.isInteger(voterId) || voterId < 1) {
       setNotice('Sign in with an account before voting.')
       return
     }
 
-    const kind = submission.queue === 'pending' ? 'admin' : 'client'
     try {
-      const updated = await castVote(submission.id, kind, voterId)
+      const updated = await castVote(submission.id, 'admin', voterId)
       setSelectedSubmission((current) => current?.id === updated.id ? { ...updated, queue: getSubmissionQueue(updated) } : current)
-      setNotice(`${kind === 'admin' ? 'Admin' : 'Client'} vote recorded for ${submission.name}.`)
+      setNotice(`Admin vote recorded for ${submission.name}.`)
     } catch (error) {
       setNotice(error instanceof Error ? error.message : 'Vote could not be recorded.')
     }
@@ -207,9 +207,13 @@ export default function AdminSubmissionsPage() {
                 </td>
                 <td>
                   <div className="admin-subs__row-actions">
-                    <button type="button" className="admin-subs__approve-btn" disabled={!accountId} onClick={() => void castCurrentVote(s)}>
-                      {tab === 'pending' ? 'Admin vote' : 'Client vote'}
-                    </button>
+                    {tab === 'pending' ? (
+                      <button type="button" className="admin-subs__approve-btn" disabled={!accountId} onClick={() => void castCurrentVote(s)}>
+                        Admin vote
+                      </button>
+                    ) : (
+                      <span className="admin-subs__subtitle">Awaiting customer votes</span>
+                    )}
                     <button type="button" className="admin-subs__inspect-btn" onClick={() => openSubmission(s, 'inspect')}>Inspect</button>
                     <button type="button" className="admin-subs__log-btn" title="View audit history" aria-label={`View audit history for ${s.name}`} onClick={() => openSubmission(s, 'history')}>
                       <span className="material-symbols-outlined">history</span>
@@ -329,9 +333,9 @@ export default function AdminSubmissionsPage() {
             )}
             <footer className="admin-subs__drawer-footer">
               <button type="button" className="admin-subs__inspect-btn" onClick={() => setSelectedSubmission(null)}>Close</button>
-              {drawerView === 'inspect' && selectedSubmission.queue !== 'approved' && (
+              {drawerView === 'inspect' && selectedSubmission.queue === 'pending' && (
                 <button type="button" className="admin-subs__approve-btn" disabled={!accountId} onClick={() => void castCurrentVote(selectedSubmission)}>
-                  Record {selectedSubmission.queue === 'pending' ? 'admin' : 'client'} vote
+                  Record admin vote
                 </button>
               )}
             </footer>

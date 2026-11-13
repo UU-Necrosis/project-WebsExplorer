@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth, authenticateDemoAccount } from '../../context/AuthContext'
+import { useAuth } from '../../context/AuthContext'
+import { authApi } from '../../services/api'
 import './css/AdminLoginPage.css'
 
 export default function AdminLoginPage() {
@@ -27,17 +28,8 @@ export default function AdminLoginPage() {
     showToast('Connecting...', 'Validating admin credentials...', 'shield')
 
     try {
-      // ── Demo login (remove when backend is ready) ──────────
-      await new Promise((r) => setTimeout(r, 800)) // simulate network
-      const demoAccount = authenticateDemoAccount(email, password)
-      if (!demoAccount) {
-        throw new Error('Invalid email or password.')
-      }
-      login('demo-token', demoAccount.id)
-      // ── Real API (uncomment when backend is ready) ─────────
-      // const { token } = await authApi.login(email, password)
-      // login(token)
-      // ───────────────────────────────────────────────────────
+      const { token, accountId } = await authApi.login(email, password)
+      login(token, String(accountId))
       showToast('Welcome', 'Authentication verified. Redirecting...', 'verified')
       setTimeout(() => navigate('/admin/overview'), 700)
     } catch (err: unknown) {

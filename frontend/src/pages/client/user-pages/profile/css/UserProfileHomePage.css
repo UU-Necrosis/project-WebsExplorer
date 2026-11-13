@@ -355,3 +355,339 @@
     text-align: center;
   }
 }
+
+.user-profile {
+  min-height: 100vh;
+  padding: 32px 24px 64px;
+  background:
+    radial-gradient(ellipse at 10% 0%, rgba(0, 182, 122, 0.1), transparent 35%),
+    #0a0e17;
+  color: #dfe2ef;
+  font-family: Inter, sans-serif;
+}
+
+.user-profile__shell {
+  width: min(1120px, 100%);
+  margin: 0 auto;
+}
+
+.user-profile__header,
+.user-profile__section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.user-profile__eyebrow {
+  margin: 0 0 8px;
+  color: #4edf9f;
+  font: 700 0.72rem 'JetBrains Mono', monospace;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.user-profile__header h1,
+.user-profile__section-heading h2 {
+  margin: 0;
+  color: #f1f5f9;
+  font-family: 'Space Grotesk', sans-serif;
+  letter-spacing: -0.035em;
+}
+
+.user-profile__header h1 {
+  font-size: clamp(2rem, 4vw, 3.2rem);
+}
+
+.user-profile__intro {
+  max-width: 620px;
+  margin: 12px 0 0;
+  color: #94a3b8;
+  line-height: 1.65;
+}
+
+.user-profile__primary-link,
+.user-profile__empty a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid #10b981;
+  border-radius: 8px;
+  background: #10b981;
+  color: #07140e;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.user-profile__account,
+.user-profile__stat,
+.user-profile__submissions {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(16, 24, 39, 0.76);
+  backdrop-filter: blur(18px);
+}
+
+.user-profile__account {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 28px;
+  padding: 18px 20px;
+  border-radius: 16px;
+}
+
+.user-profile__avatar,
+.user-profile__submission-mark {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgba(78, 223, 159, 0.28);
+  background: rgba(0, 182, 122, 0.12);
+  color: #4edf9f;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+}
+
+.user-profile__avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  font-size: 1.15rem;
+}
+
+.user-profile__account > div:nth-child(2) {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.user-profile__account strong {
+  color: #f1f5f9;
+}
+
+.user-profile__account > div:nth-child(2) > span {
+  color: #94a3b8;
+  overflow-wrap: anywhere;
+}
+
+.user-profile__account-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+  padding: 8px 11px;
+  border: 1px solid rgba(78, 223, 159, 0.2);
+  border-radius: 9999px;
+  color: #4edf9f;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.user-profile__account-badge .material-symbols-outlined {
+  font-size: 1rem;
+}
+
+.user-profile__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.user-profile__stat {
+  display: grid;
+  gap: 12px;
+  padding: 18px 20px;
+  border-radius: 14px;
+}
+
+.user-profile__stat span {
+  color: #94a3b8;
+  font-size: 0.88rem;
+}
+
+.user-profile__stat strong {
+  color: #f1f5f9;
+  font: 700 1.8rem 'JetBrains Mono', monospace;
+}
+
+.user-profile__submissions {
+  margin-top: 28px;
+  padding: 24px;
+  border-radius: 18px;
+}
+
+.user-profile__section-heading {
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.user-profile__section-heading h2 {
+  font-size: 1.55rem;
+}
+
+.user-profile__section-heading > a {
+  color: #4edf9f;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.user-profile__state {
+  margin: 0;
+  padding: 24px;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  color: #94a3b8;
+  text-align: center;
+}
+
+.user-profile__state--error {
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #ffb4ab;
+}
+
+.user-profile__empty {
+  display: grid;
+  justify-items: center;
+  padding: 38px 20px;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  text-align: center;
+}
+
+.user-profile__empty > .material-symbols-outlined {
+  color: #4edf9f;
+  font-size: 2rem;
+}
+
+.user-profile__empty h3 {
+  margin: 12px 0 4px;
+  color: #f1f5f9;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.user-profile__empty p {
+  margin: 0 0 18px;
+  color: #94a3b8;
+}
+
+.user-profile__list {
+  display: grid;
+  gap: 12px;
+}
+
+.user-profile__submission {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: rgba(10, 14, 23, 0.56);
+}
+
+.user-profile__submission-mark {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+}
+
+.user-profile__submission-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.user-profile__submission-copy h3 {
+  margin: 0 0 4px;
+  color: #f1f5f9;
+  font: 600 1rem 'Space Grotesk', sans-serif;
+}
+
+.user-profile__submission-copy a {
+  display: block;
+  overflow: hidden;
+  color: #7bd0ff;
+  font-size: 0.83rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-profile__submission-copy p {
+  margin: 8px 0;
+  color: #bdc8d1;
+  font-size: 0.9rem;
+}
+
+.user-profile__submission-date {
+  color: #64748b;
+  font: 0.72rem 'JetBrains Mono', monospace;
+}
+
+.user-profile__status {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 1px solid rgba(245, 158, 11, 0.22);
+  border-radius: 9999px;
+  color: #fbbf24;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.user-profile__status--approved {
+  border-color: rgba(78, 223, 159, 0.24);
+  color: #4edf9f;
+}
+
+.user-profile__status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+@media (max-width: 680px) {
+  .user-profile {
+    padding: 24px 16px 40px;
+  }
+
+  .user-profile__header,
+  .user-profile__section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .user-profile__account {
+    flex-wrap: wrap;
+  }
+
+  .user-profile__account-badge {
+    margin-left: 64px;
+  }
+
+  .user-profile__stats {
+    grid-template-columns: 1fr;
+  }
+
+  .user-profile__submissions {
+    padding: 18px 14px;
+  }
+
+  .user-profile__submission {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .user-profile__submission-copy {
+    flex-basis: calc(100% - 64px);
+  }
+
+  .user-profile__status {
+    margin-left: 62px;
+  }
+}

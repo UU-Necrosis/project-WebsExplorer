@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { Navigate, Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { getSubmissionQueue, useClientSubmissions } from '../context/ClientSubmissionStore'
-import './AdminLayout.css'
+import { ClientSubmissionProvider, getSubmissionQueue, useClientSubmissions } from '../context/ClientSubmissionStore'
+import './css/AdminLayout.css'
 
 const NAV_ITEMS = [
   { label: 'Overview',       path: '/admin/overview',     icon: 'grid_view' },
@@ -18,6 +18,18 @@ const INFRA_ITEMS = [
 ]
 
 export default function AdminLayout() {
+  const { isAdminLoggedIn } = useAuth()
+
+  if (!isAdminLoggedIn) return <Navigate to="/admin/login" replace />
+
+  return (
+    <ClientSubmissionProvider>
+      <AdminLayoutContent />
+    </ClientSubmissionProvider>
+  )
+}
+
+function AdminLayoutContent() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const { logout } = useAuth()
   const { submissions, isLoading, loadError } = useClientSubmissions()
