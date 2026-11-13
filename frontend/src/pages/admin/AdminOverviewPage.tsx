@@ -21,16 +21,23 @@ export default function AdminOverviewPage() {
   const navigate = useNavigate()
   const { submissions, savedWebsites, isLoading, loadError } = useClientSubmissions()
   const [nodes, setNodes] = useState<ApiNode[]>([])
+  const [nodesLoading, setNodesLoading] = useState(true)
   const [nodesError, setNodesError] = useState('')
 
   useEffect(() => {
     let active = true
     nodesApi.list()
       .then((items) => {
-        if (active) setNodes(items)
+        if (active) {
+          setNodes(items)
+          setNodesLoading(false)
+        }
       })
       .catch((error: unknown) => {
-        if (active) setNodesError(error instanceof Error ? error.message : 'Unable to load cluster nodes.')
+        if (active) {
+          setNodesError(error instanceof Error ? error.message : 'Unable to load cluster nodes.')
+          setNodesLoading(false)
+        }
       })
     return () => { active = false }
   }, [])
@@ -48,10 +55,10 @@ export default function AdminOverviewPage() {
   const dataStatus = loadError ? 'API unavailable' : isLoading ? 'Loading' : 'Connected'
   const displayValue = (value: number) => loadError ? 'N/A' : isLoading ? '...' : String(value)
   const kpiData = [
-    { label: 'Directory Websites', value: displayValue(savedWebsites.length), unit: 'websites', meta: `${categories.size} categories`, status: dataStatus, pct: null, icon: 'language' },
-    { label: 'Pending Review', value: displayValue(pendingSubmissions.length), unit: 'in queue', meta: `${adminVoteProgress}% of admin vote slots filled`, status: dataStatus, pct: adminVoteProgress, icon: 'inbox' },
-    { label: 'Community Audit', value: displayValue(auditSubmissions.length), unit: 'submissions', meta: `${clientVoteProgress}% of client vote slots filled`, status: dataStatus, pct: clientVoteProgress, icon: 'groups' },
-    { label: 'Client Votes', value: displayValue(clientVotes), unit: 'votes', meta: `Across ${auditSubmissions.length} audit websites`, status: dataStatus, pct: clientVoteProgress, icon: 'how_to_vote' },
+    { label: 'Directory Websites', value: displayValue(savedWebsites.length), unit: 'websites', meta: loadError ? 'Unavailable' : isLoading ? 'Loading' : `${categories.size} categories`, status: dataStatus, pct: null, icon: 'language' },
+    { label: 'Pending Review', value: displayValue(pendingSubmissions.length), unit: 'in queue', meta: loadError ? 'Unavailable' : isLoading ? 'Loading' : `${adminVoteProgress}% of admin vote slots filled`, status: dataStatus, pct: adminVoteProgress, icon: 'inbox' },
+    { label: 'Community Audit', value: displayValue(auditSubmissions.length), unit: 'submissions', meta: loadError ? 'Unavailable' : isLoading ? 'Loading' : `${clientVoteProgress}% of client vote slots filled`, status: dataStatus, pct: clientVoteProgress, icon: 'groups' },
+    { label: 'Client Votes', value: displayValue(clientVotes), unit: 'votes', meta: loadError ? 'Unavailable' : isLoading ? 'Loading' : `Across ${auditSubmissions.length} audit websites`, status: dataStatus, pct: clientVoteProgress, icon: 'how_to_vote' },
   ]
   const prioritySubmissions = pendingSubmissions.slice(0, 5)
   const onlineNodeCount = nodes.filter((node) => node.status === 'online').length
@@ -63,8 +70,7 @@ export default function AdminOverviewPage() {
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
         <div className="admin-overview__head">
           <div className="admin-overview__breadcrumb">
-            <span>cluster-us-east-1</span><span>/</span>
-            <span>prod</span><span>/</span>
+            <span>admin</span><span>/</span>
             <span className="admin-overview__breadcrumb-active">admin-overview</span>
           </div>
           <h1 className="admin-overview__title">Admin Operations Overview</h1>
@@ -187,7 +193,7 @@ export default function AdminOverviewPage() {
                 <span className="admin-overview__card-title">Cluster Quorum</span>
               </div>
               <span className="admin-overview__quorum-badge">
-                {nodes.length ? `${onlineNodeCount}/${nodes.length} NODES ONLINE` : 'NO NODES REGISTERED'}
+                {nodesLoading ? 'LOADING NODES' : nodes.length ? `${onlineNodeCount}/${nodes.length} NODES ONLINE` : nodesError ? 'API UNAVAILABLE' : 'NO NODES REGISTERED'}
               </span>
             </div>
             <div className="admin-overview__nodes-list" tabIndex={0} aria-label="Cluster quorum nodes">
@@ -201,7 +207,7 @@ export default function AdminOverviewPage() {
                   <span className="admin-overview__node-ms">{node.latencyMs === null ? node.status : `${node.latencyMs}ms`}</span>
                 </div>
               ))}
-              {!nodes.length && <span className="admin-overview__node-name">{nodesError || 'Add registered nodes to the cluster_nodes table.'}</span>}
+              {!nodes.length && <span className="admin-overview__node-name">{nodesLoading ? 'Loading nodes...' : nodesError || 'No nodes registered.'}</span>}
             </div>
           </div>
         </div>

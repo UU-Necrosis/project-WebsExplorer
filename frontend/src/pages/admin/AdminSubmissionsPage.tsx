@@ -57,7 +57,7 @@ export default function AdminSubmissionsPage() {
     { label: 'Pending Review', val: displayValue(pendingCount), unit: 'websites', meta: 'Admin votes required for audit', status: dataStatus, pct: pendingAdminVoteProgress, icon: 'inbox' },
     { label: 'Under Community Audit', val: displayValue(auditCount), unit: 'websites', meta: 'Client votes required for review', status: dataStatus, pct: auditCommunityVoteProgress, icon: 'groups' },
     { label: 'Queued Submissions', val: displayValue(queuedSubmissions.length), unit: 'websites', meta: 'Pending plus community audit', status: dataStatus, pct: null, icon: 'list_alt' },
-    { label: 'Stage Votes', val: displayValue(totalVotes), unit: 'votes', meta: `Across ${queuedSubmissions.length} queued websites`, status: dataStatus === 'Connected' ? `${voteProgress}% quorum` : dataStatus, pct: voteProgress, icon: 'how_to_vote' },
+    { label: 'Stage Votes', val: displayValue(totalVotes), unit: 'votes', meta: dataStatus === 'Connected' ? `Across ${queuedSubmissions.length} queued websites` : dataStatus, status: dataStatus === 'Connected' ? `${voteProgress}% quorum` : dataStatus, pct: voteProgress, icon: 'how_to_vote' },
   ]
   const selectedVoteIds = selectedSubmission
     ? selectedSubmission.queue === 'pending' ? selectedSubmission.adminVotes : selectedSubmission.clientVotes
@@ -98,15 +98,8 @@ export default function AdminSubmissionsPage() {
           </div>
           <h1 className="admin-subs__title">Admin Submission Queue</h1>
           <p className="admin-subs__subtitle">
-            Review incoming community submissions, verify credentials, and manage consensus audit queues.
+            Review incoming submissions and monitor admin and community vote progress.
           </p>
-        </div>
-        <div className="admin-subs__actions">
-          <button className="admin-subs__btn"><span className="material-symbols-outlined">sync</span> Sync Ledger</button>
-          <button className="admin-subs__btn"><span className="material-symbols-outlined">checklist</span> Batch Review</button>
-          <button className="admin-subs__btn admin-subs__btn--primary">
-            <span className="material-symbols-outlined">add</span> Manual Add
-          </button>
         </div>
       </div>
 
