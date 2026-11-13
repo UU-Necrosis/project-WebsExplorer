@@ -48,7 +48,7 @@ export class DirectoryService {
     return submissions.map((submission) => this.withQueue(submission));
   }
 
-  async createSubmission(input: CreateSubmissionInput) {
+  async createSubmission(input: CreateSubmissionInput, user?: { id: string; name: string; email: string }) {
     const requiredFields = [input.name, input.url, input.appearance, input.description];
     if (requiredFields.some((value) => typeof value !== 'string' || !value.trim())) {
       throw new BadRequestException('Name, URL, short description, and description are required.');
@@ -60,13 +60,13 @@ export class DirectoryService {
       id,
       name: input.name.trim(),
       url: input.url.trim(),
-      submittedBy: input.submittedBy?.trim() || 'community-member',
+      submittedBy: user?.name?.trim() || input.submittedBy?.trim() || 'community-member',
       appearance: input.appearance.trim(),
       description: input.description.trim(),
       categories: Array.isArray(input.categories) ? input.categories : [],
       tags: Array.isArray(input.tags) ? input.tags : [],
-      username: input.username?.trim() || 'community-member',
-      role: input.role?.trim() || 'Community',
+      username: user?.name?.trim() || input.username?.trim() || 'community-member',
+      role: user ? 'Customer' : input.role?.trim() || 'Community',
       hash: `0x${compactId.slice(0, 8)}...${compactId.slice(-4)}`,
       fullHash: compactId,
       submittedAt: new Date(),

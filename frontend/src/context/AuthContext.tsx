@@ -112,7 +112,7 @@ const AuthContext = createContext<AuthCtx | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(
-    () => localStorage.getItem('admin_token')
+    () => localStorage.getItem('admin_token') ?? localStorage.getItem('customer_token')
   )
   const [accountId, setAccountId] = useState<string | null>(
     () => localStorage.getItem('admin_account_id')
@@ -156,6 +156,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       removePresenceSession(accountId, sessionId)
     }
     localStorage.setItem('admin_token', t)
+    localStorage.removeItem('customer_token')
     if (nextAccountId) localStorage.setItem('admin_account_id', nextAccountId)
     else localStorage.removeItem('admin_account_id')
     setToken(t)
@@ -166,6 +167,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (accountId) removePresenceSession(accountId, sessionId)
     localStorage.removeItem('admin_token')
     localStorage.removeItem('admin_account_id')
+    localStorage.removeItem('customer_token')
+    localStorage.removeItem('customer_user')
     setToken(null)
     setAccountId(null)
     setPresenceRevision((revision) => revision + 1)

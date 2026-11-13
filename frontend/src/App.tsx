@@ -14,6 +14,7 @@ import AdminDirectoryPage from './pages/admin/AdminDirectoryPage'
 import AdminAuditLogsPage from './pages/admin/security/AdminAuditLogsPage'
 
 // Client pages
+import ClientAuthPage from './pages/client/ClientAuthPage'
 import ClientHomePage from './pages/client/ClientHomePage'
 import GuestHomePage from './pages/client/Guest pages/GuestHomePage'
 import UserHomePage from './pages/client/User pages/UserHomePage'
@@ -36,6 +37,8 @@ export default function App() {
             <Route path="profile" element={<UserProfileHomePage />} />
             <Route path="guest" element={<GuestHomePage />} />
             <Route path="user" element={<UserHomePage />} />
+            <Route path="login" element={<ClientAuthPage />} />
+            <Route path="signup" element={<ClientAuthPage />} />
           </Route>
 
           {/* ── Admin login (no sidebar) ───────────────── */}

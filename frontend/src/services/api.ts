@@ -13,8 +13,10 @@ export interface ApiNode {
 const BASE = (import.meta.env.VITE_API_URL ?? 'http://localhost:3000').replace(/\/+$/, '')
 
 function authHeader(): Record<string, string> {
-  const t = localStorage.getItem('admin_token')
-  return t ? { Authorization: `Bearer ${t}` } : {}
+  const customerToken = localStorage.getItem('customer_token')
+  const adminToken = localStorage.getItem('admin_token')
+  const token = customerToken ?? adminToken
+  return token ? { Authorization: `Bearer ${token}` } : {}
 }
 
 async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
@@ -38,6 +40,25 @@ export const authApi = {
     req<{ token: string }>('/api/auth/admin/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
+    }),
+}
+
+export type CustomerUser = {
+  id: string
+  name: string
+  email: string
+}
+
+export const customerAuthApi = {
+  signup: (payload: { name: string; email: string; password: string }) =>
+    req<{ token: string; user: CustomerUser }>('/api/auth/signup', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  login: (payload: { email: string; password: string }) =>
+    req<{ token: string; user: CustomerUser }>('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(payload),
     }),
 }
 

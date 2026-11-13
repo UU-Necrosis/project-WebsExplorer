@@ -1,7 +1,6 @@
-import { useState } from 'react'
-import { ADMIN_AUDIT_LOGS } from '../../../context/AdminDemoData'
+import { useEffect, useState } from 'react'
+import { adminAuditApi, type AdminAuditLog } from '../../../context/AdminDemoData'
 import './css/AdminAuditLogsPage.css'
-
 
 function typeBadge(type: string) {
   const map: Record<string, { cls: string; label: string }> = {
@@ -18,8 +17,33 @@ function typeBadge(type: string) {
 
 export default function AdminAuditLogsPage() {
   const [search, setSearch] = useState('')
+  const [logs, setLogs] = useState<AdminAuditLog[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
 
-  const filtered = ADMIN_AUDIT_LOGS.filter((l) =>
+  useEffect(() => {
+    let active = true
+
+    adminAuditApi.list()
+      .then((items) => {
+        if (active) {
+          setLogs(items)
+          setLoadError('')
+        }
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          setLoadError(error instanceof Error ? error.message : 'Unable to load audit logs.')
+        }
+      })
+      .finally(() => {
+        if (active) setIsLoading(false)
+      })
+
+    return () => { active = false }
+  }, [])
+
+  const filtered = logs.filter((l) =>
     l.event.toLowerCase().includes(search.toLowerCase()) ||
     l.actor.toLowerCase().includes(search.toLowerCase()) ||
     l.hash.toLowerCase().includes(search.toLowerCase())
@@ -66,7 +90,17 @@ export default function AdminAuditLogsPage() {
             </tr>
           </thead>
           <tbody>
-            {filtered.map((l) => {
+            {isLoading && (
+              <tr>
+                <td colSpan={5}>Loading audit logs...</td>
+              </tr>
+            )}
+            {!isLoading && loadError && (
+              <tr>
+                <td colSpan={5}>{loadError}</td>
+              </tr>
+            )}
+            {!isLoading && !loadError && filtered.map((l) => {
               const badge = typeBadge(l.type)
               return (
                 <tr key={l.id}>
@@ -87,6 +121,11 @@ export default function AdminAuditLogsPage() {
                 </tr>
               )
             })}
+            {!isLoading && !loadError && filtered.length === 0 && (
+              <tr>
+                <td colSpan={5}>No audit logs match your search.</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

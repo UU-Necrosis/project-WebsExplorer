@@ -132,10 +132,11 @@
 .admin-overview__card-hd {
   padding: 1rem 1.25rem; border-bottom: 1px solid #f1f5f9;
   display: flex; align-items: center; justify-content: space-between;
+  gap: 0.75rem; flex-wrap: wrap;
 }
 .admin-overview__card-title {
   font-size: 0.8125rem; font-weight: 700; color: #0f172a; text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.04em; line-height: 1.4; overflow-wrap: anywhere; word-break: break-word;
 }
 .admin-overview__card-link {
   font-size: 0.75rem; color: #059669; font-weight: 600; text-decoration: none;
@@ -185,11 +186,12 @@
 .admin-overview__quorum-hd {
   padding: 1rem 1.25rem; border-bottom: 1px solid #f1f5f9;
   display: flex; align-items: center; justify-content: space-between;
+  gap: 0.75rem; flex-wrap: wrap;
 }
 .admin-overview__quorum-badge {
   background: #f0fdf4; color: #065f46; border: 1px solid #bbf7d0;
   font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700;
-  padding: 2px 8px; border-radius: 4px;
+  padding: 2px 8px; border-radius: 4px; line-height: 1.5; overflow-wrap: anywhere;
 }
 .admin-overview__node-row {
   display: flex; align-items: center; justify-content: space-between;
@@ -207,6 +209,15 @@
 }
 
 /* Chart sparkline area */
+.admin-overview__empty-state {
+  display: flex; align-items: center; justify-content: center;
+  gap: 0.625rem; min-height: 8rem; padding: 1.25rem; color: #64748b;
+  font-size: 0.95rem; text-align: center; flex-wrap: wrap;
+}
+.admin-overview__empty-state .material-symbols-outlined {
+  font-size: 1.15rem; color: #94a3b8;
+}
+
 .admin-overview__chart { padding: 1rem 1.25rem; }
 .admin-overview__chart-stats {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;

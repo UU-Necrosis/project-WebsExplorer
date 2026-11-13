@@ -1,4 +1,6 @@
 ﻿import { useState, type FormEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../../context/AuthContext'
 import { useClientSubmissions } from '../../../context/ClientSubmissionStore'
 import './css/UserSubmitWeb.css'
 
@@ -6,6 +8,8 @@ const categories = ['AI & ML', 'Dev Tools', 'Design & UI', 'SaaS & Cloud', 'Medi
 const tags = ['#developer-tools', '#selfhosted', '#freemium']
 
 export default function UserSubmitWeb() {
+  const navigate = useNavigate()
+  const { isLoggedIn } = useAuth()
   const { addSubmission } = useClientSubmissions()
   const [relationship, setRelationship] = useState('creator')
   const [rating, setRating] = useState('5')
@@ -59,6 +63,39 @@ export default function UserSubmitWeb() {
     if (event.key !== 'Enter') return
     event.preventDefault()
     addTag()
+  }
+
+  if (!isLoggedIn) {
+    return (
+      <div style={{
+        minHeight: '60vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'column',
+        gap: '1rem',
+        padding: '2rem',
+        textAlign: 'center',
+      }}>
+        <h2 style={{ margin: 0, color: '#0f172a' }}>Please log in to submit a website</h2>
+        <p style={{ margin: 0, color: '#475569' }}>Create a customer account or sign in to continue.</p>
+        <button
+          type="button"
+          onClick={() => navigate('/login')}
+          style={{
+            background: '#0f172a',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '0.7rem',
+            padding: '0.8rem 1.25rem',
+            fontWeight: 700,
+            cursor: 'pointer',
+          }}
+        >
+          Go to login
+        </button>
+      </div>
+    )
   }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {

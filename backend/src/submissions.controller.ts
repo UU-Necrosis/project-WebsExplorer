@@ -1,10 +1,14 @@
-import { Body, Controller, Get, Param, Post, BadRequestException } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, BadRequestException, Headers } from '@nestjs/common';
+import { AuthService } from './auth.service';
 import { DirectoryService } from './directory.service';
 import type { CreateSubmissionInput, VoteKind } from './directory.service';
 
 @Controller('api/submissions')
 export class SubmissionsController {
-  constructor(private readonly directoryService: DirectoryService) {}
+  constructor(
+    private readonly directoryService: DirectoryService,
+    private readonly authService: AuthService,
+  ) {}
 
   @Get()
   listSubmissions() {
@@ -12,8 +16,12 @@ export class SubmissionsController {
   }
 
   @Post()
-  createSubmission(@Body() body: CreateSubmissionInput) {
-    return this.directoryService.createSubmission(body);
+  createSubmission(
+    @Headers('authorization') authorization: string | undefined,
+    @Body() body: CreateSubmissionInput,
+  ) {
+    const user = this.authService.resolveFromHeader(authorization);
+    return this.directoryService.createSubmission(body, user);
   }
 
   @Post(':id/votes/:kind')
