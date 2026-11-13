@@ -48,7 +48,7 @@ export default function GuestHomePage() {
         </nav>
 
         <div className="guest-home__actions">
-          <a href="/admin/login" className="guest-home__ghost-button">Login</a>
+          <a href="/guest-login" className="guest-home__ghost-button">Login</a>
         </div>
       </header>
 
@@ -207,8 +207,8 @@ export default function GuestHomePage() {
               Found a hidden gem, a niche tool, or a product that deserves more attention? Submit it and help others discover what works.
             </p>
             <div className="guest-home__cta-actions">
-              <a href="/admin/login" className="guest-home__primary-button">Login to submit</a>
-              <button type="button" className="guest-home__secondary-button">Learn how it works</button>
+              <a href="/guest-login" className="guest-home__primary-button">Login to submit</a>
+              <a href="/guest-signup" className="guest-home__secondary-button">Create account</a>
             </div>
           </div>
         </section>

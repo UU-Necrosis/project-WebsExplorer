@@ -1,0 +1,126 @@
+.guest-auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #ecfeff 100%);
+  font-family: 'Inter', sans-serif;
+}
+
+.guest-auth-card {
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1.2rem;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+  padding: 1.5rem;
+}
+
+.guest-auth-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.guest-auth-brand {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.guest-auth-link {
+  display: inline-block;
+  margin-top: 0;
+  color: #475569;
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+
+.guest-auth-link:hover {
+  text-decoration: underline;
+}
+
+.guest-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.guest-auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-bottom: 1rem;
+}
+
+.guest-auth-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.guest-auth-input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.7rem;
+  padding: 0.8rem 0.9rem;
+  font-size: 0.95rem;
+  outline: none;
+  background: #fff;
+  color: #0f172a;
+}
+
+.guest-auth-input:focus {
+  border-color: #0f172a;
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+}
+
+.guest-auth-button {
+  width: 100%;
+  border: none;
+  border-radius: 0.7rem;
+  background: #0f172a;
+  color: #ffffff;
+  padding: 0.82rem 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 0.25rem;
+  transition: opacity 0.2s ease;
+}
+
+.guest-auth-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.guest-auth-error {
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  padding: 0.7rem 0.8rem;
+  border-radius: 0.6rem;
+  font-size: 0.86rem;
+  margin-bottom: 1rem;
+}
+
+.guest-auth-switch {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.guest-auth-switch a {
+  color: #0f172a;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.guest-auth-switch a:hover {
+  text-decoration: underline;
+}

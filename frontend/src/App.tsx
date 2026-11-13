@@ -14,9 +14,10 @@ import AdminDirectoryPage from './pages/admin/AdminDirectoryPage'
 import AdminAuditLogsPage from './pages/admin/security/AdminAuditLogsPage'
 
 // Client pages
-import ClientAuthPage from './pages/client/ClientAuthPage'
 import ClientHomePage from './pages/client/ClientHomePage'
 import GuestHomePage from './pages/client/Guest pages/GuestHomePage'
+import GuestLoginPage from './pages/client/Guest pages/GuestLoginPage'
+import GuestSignupPage from './pages/client/Guest pages/GuestSignupPage'
 import UserHomePage from './pages/client/User pages/UserHomePage'
 import UserSubmitWeb from './pages/client/User pages/UserSubmitWeb'
 import UserProfileHomePage from './pages/client/User pages/profile/UserProfileHomePage'
@@ -37,8 +38,10 @@ export default function App() {
             <Route path="profile" element={<UserProfileHomePage />} />
             <Route path="guest" element={<GuestHomePage />} />
             <Route path="user" element={<UserHomePage />} />
-            <Route path="login" element={<ClientAuthPage />} />
-            <Route path="signup" element={<ClientAuthPage />} />
+            <Route path="guest-login" element={<GuestLoginPage />} />
+            <Route path="guest-signup" element={<GuestSignupPage />} />
+            <Route path="login" element={<GuestLoginPage />} />
+            <Route path="signup" element={<GuestSignupPage />} />
           </Route>
 
           {/* ── Admin login (no sidebar) ───────────────── */}

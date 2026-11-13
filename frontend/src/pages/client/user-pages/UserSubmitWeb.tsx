@@ -81,7 +81,7 @@ export default function UserSubmitWeb() {
         <p style={{ margin: 0, color: '#475569' }}>Create a customer account or sign in to continue.</p>
         <button
           type="button"
-          onClick={() => navigate('/login')}
+          onClick={() => navigate('/guest-login')}
           style={{
             background: '#0f172a',
             color: '#fff',
