@@ -4,5 +4,5 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  base: process.env.VITE_BASE_URL || '/web-explorer.com',
+  base: process.env.VITE_BASE_URL || '/',
 })

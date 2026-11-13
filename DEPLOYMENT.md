@@ -2,7 +2,8 @@
 
 ## Services
 
-- Deploy `frontend/` as a Vercel project. Set `VITE_API_URL` to the public Render API origin, for example `https://webs-explore-api.onrender.com`.
+- Deploy `frontend/` as a Vercel project. Set the Vercel project Root Directory to `frontend`, Framework Preset to Vite, Build Command to `npm run build`, and Output Directory to `dist`.
+- Set Vercel's `VITE_BASE_URL` to `/` and `VITE_API_URL` to the public Render API origin, for example `https://webs-explore-api.onrender.com`. Replace the example with the actual Render service URL shown in its dashboard. These variables are embedded at build time, so redeploy after changing them.
 - Deploy the root Render Blueprint using `render.yaml`. It creates a NestJS web service and a PostgreSQL database. Set `CORS_ORIGIN` to the Vercel production origin.
 - Keep `DATABASE_URL` private. Render injects it into the API from the managed database connection string.
 
@@ -29,6 +30,12 @@ npm --prefix backend run start:dev
 ```
 
 For local frontend development, copy `frontend/.env.example` to `frontend/.env.local` and set `VITE_API_URL=http://localhost:3000`.
+
+## Frontend routing and content
+
+- `frontend/vercel.json` sends browser routes to `index.html`, allowing React Router routes such as `/discover` and `/admin/login` to load on refresh.
+- In Render, set `CORS_ORIGIN` to the exact Vercel production origin, including `https://` and excluding any path. If both production and preview deployments need API access, provide a comma-separated list of exact origins.
+- The database is not seeded with website records. Submit content and complete the configured review votes before it appears in the saved websites directory. Confirm the Render API is healthy and `GET /api/websites-saved` returns the expected records if the frontend loads but its directory is empty.
 
 ## Current limitation
 
