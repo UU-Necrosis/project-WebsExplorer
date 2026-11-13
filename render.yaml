@@ -1,6 +1,6 @@
 databases:
   - name: webs-explore-db
-    databaseName: webs_explore
+    databaseName: web-explore.db
     user: webs_explore
     plan: basic-256mb
 

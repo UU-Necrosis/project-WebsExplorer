@@ -15,4 +15,5 @@ export const ADMIN_AUDIT_LOGS = [
   { id: '6', event: 'ADMIN_LOGIN', hash: '0xcc21...ff09', actor: 'root_operator', time: '2026-11-06 05:59:11 UTC', type: 'auth' },
   { id: '7', event: 'ENCLAVE_REKEY', hash: '0xde90...3311', actor: 'system', time: '2026-11-06 05:30:00 UTC', type: 'security' },
   { id: '8', event: 'DIRECTORY_ENTRY_REMOVED', hash: '0xab33...de12', actor: 'root_operator', time: '2026-11-06 04:44:22 UTC', type: 'remove' },
+  { id: '9', event: 'SUBMISSION_REJECTED', hash: '0x5e21...a1b3', actor: 'root_operator', time: '2026-11-06 04:12:09 UTC', type: 'reject' },
 ]
