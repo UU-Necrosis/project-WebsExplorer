@@ -47,7 +47,7 @@ export class SubmissionsController {
   recordVote(
     @Param('id') id: string,
     @Param('kind') kind: string,
-    @Body() body: { voterId?: number },
+    @Body() _body: { voterId?: number },
     @Headers('authorization') authorization: string | undefined,
   ) {
     if (kind !== 'admin' && kind !== 'client') {
@@ -55,9 +55,9 @@ export class SubmissionsController {
     }
     if (kind === 'admin') {
       const admin = this.authService.resolveAdminFromHeader(authorization);
-      return this.directoryService.recordVote(id, 'admin', admin.adminId);
+      return this.directoryService.recordVote(id, admin);
     }
     const customer = this.authService.resolveCustomerFromHeader(authorization);
-    return this.directoryService.recordVote(id, 'client', customer.id);
+    return this.directoryService.recordVote(id, customer);
   }
 }

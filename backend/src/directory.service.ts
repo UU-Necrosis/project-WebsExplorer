@@ -10,6 +10,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { randomUUID } from 'node:crypto';
 import { DataSource, EntityManager, IsNull, Repository } from 'typeorm';
+import { AuditService } from './audit.service';
 import { ClusterNode } from './entities/cluster-node.entity';
 import { User } from './entities/user.entity';
 import { WebsiteSaved } from './entities/website-saved.entity';
@@ -48,8 +49,6 @@ export interface CreateSubmissionInput {
   canVerifyConnection?: boolean;
 }
 
-export type VoteKind = 'admin' | 'client';
-
 export interface NodeHeartbeatInput {
   id: string;
   name: string;
@@ -70,6 +69,7 @@ export class DirectoryService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly dataSource: DataSource,
+    private readonly auditService: AuditService,
   ) {}
 
   async listSubmissions() {
@@ -160,8 +160,19 @@ export class DirectoryService {
       }
 
       if (existing) {
+        const previousStatus = existing.status;
         const voteAdded = this.addRoleVote(existing, user);
         if (!voteAdded) {
+          await this.auditService.record({
+            event: 'DUPLICATE_SUBMISSION_ATTEMPT',
+            type: 'add',
+            actorId: user.id,
+            actorName: user.name,
+            actorRole: user.role,
+            targetId: existing.id,
+            targetName: existing.name,
+            details: { voteAdded: false },
+          }, manager);
           return {
             ...this.withQueue(existing),
             duplicate: true,
@@ -173,6 +184,28 @@ export class DirectoryService {
         this.updateApprovalStatus(existing);
         const updated = await repository.save(existing);
         if (updated.status === 'Visible') await this.ensureSavedWebsite(manager, updated.id);
+        await this.auditService.record({
+          event: 'DUPLICATE_SUBMISSION_VOTE_ADDED',
+          type: 'vote',
+          actorId: user.id,
+          actorName: user.name,
+          actorRole: user.role,
+          targetId: updated.id,
+          targetName: updated.name,
+          details: { adminVotes: updated.adminVotes.length, customerVotes: updated.clientVotes.length },
+        }, manager);
+        if (previousStatus !== 'Visible' && updated.status === 'Visible') {
+          await this.auditService.record({
+            event: 'WEBSITE_APPROVED',
+            type: 'approve',
+            actorId: 'system',
+            actorName: 'System',
+            actorRole: 'system',
+            targetId: updated.id,
+            targetName: updated.name,
+            details: { adminVotes: updated.adminVotes.length, customerVotes: updated.clientVotes.length },
+          }, manager);
+        }
         return {
           ...this.withQueue(updated),
           duplicate: true,
@@ -238,6 +271,16 @@ export class DirectoryService {
       });
 
       const saved = await repository.save(submission);
+      await this.auditService.record({
+        event: 'SUBMISSION_CREATED',
+        type: 'add',
+        actorId: user.id,
+        actorName: user.name,
+        actorRole: user.role,
+        targetId: saved.id,
+        targetName: saved.name,
+        details: { url: saved.url, categories: saved.categories },
+      }, manager);
       return {
         ...this.withQueue(saved),
         duplicate: false,
@@ -247,7 +290,7 @@ export class DirectoryService {
     });
   }
 
-  async recordVote(id: string, kind: VoteKind, voterId: number | string) {
+  async recordVote(id: string, actor: SubmissionActor) {
     return this.dataSource.transaction(async (manager) => {
       const repository = manager.getRepository(WebsiteSubmission);
       const submission = await repository.findOne({
@@ -256,6 +299,11 @@ export class DirectoryService {
       });
       if (!submission) throw new NotFoundException('Submission not found.');
 
+      const kind = actor.role === 'admin' ? 'admin' : 'client';
+      const voterId = kind === 'admin' ? actor.adminId : actor.id;
+      if (voterId == null || voterId === '') {
+        throw new UnauthorizedException('A valid voting identity is required.');
+      }
       const votes = kind === 'admin' ? submission.adminVotes : submission.clientVotes;
       const threshold = kind === 'admin' ? ADMIN_VOTE_THRESHOLD : CLIENT_VOTE_THRESHOLD;
       if (kind === 'client' && submission.adminVotes.length < ADMIN_VOTE_THRESHOLD) {
@@ -269,6 +317,7 @@ export class DirectoryService {
       }
       if (votes.length >= threshold) throw new ConflictException('This vote stage is already complete.');
 
+      const previousStatus = submission.status;
       if (kind === 'admin') submission.adminVotes = [...votes, voterId];
       else submission.clientVotes = [...votes, voterId];
 
@@ -276,6 +325,28 @@ export class DirectoryService {
       const updated = await repository.save(submission);
 
       if (updated.status === 'Visible') await this.ensureSavedWebsite(manager, id);
+      await this.auditService.record({
+        event: kind === 'admin' ? 'ADMIN_VOTE_RECORDED' : 'CUSTOMER_VOTE_RECORDED',
+        type: 'vote',
+        actorId: String(voterId),
+        actorName: actor.name,
+        actorRole: actor.role,
+        targetId: updated.id,
+        targetName: updated.name,
+        details: { adminVotes: updated.adminVotes.length, customerVotes: updated.clientVotes.length },
+      }, manager);
+      if (previousStatus !== 'Visible' && updated.status === 'Visible') {
+        await this.auditService.record({
+          event: 'WEBSITE_APPROVED',
+          type: 'approve',
+          actorId: 'system',
+          actorName: 'System',
+          actorRole: 'system',
+          targetId: updated.id,
+          targetName: updated.name,
+          details: { adminVotes: updated.adminVotes.length, customerVotes: updated.clientVotes.length },
+        }, manager);
+      }
 
       return this.withQueue(updated);
     });

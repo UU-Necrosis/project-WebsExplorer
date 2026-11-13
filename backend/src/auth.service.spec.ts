@@ -3,6 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { createHash } from 'node:crypto';
 import { UnauthorizedException } from '@nestjs/common';
 import { User } from './entities/user.entity';
+import { AuditService } from './audit.service';
 import { AuthService } from './auth.service';
 
 describe('AuthService', () => {
@@ -13,6 +14,7 @@ describe('AuthService', () => {
     where: jest.Mock;
     getMany: jest.Mock;
   };
+  let auditRecord: jest.Mock;
 
   const password = 'secure-pass';
   const hashPassword = (value: string) => createHash('sha256').update(value).digest('hex');
@@ -35,11 +37,13 @@ describe('AuthService', () => {
     const userRepository = {
       createQueryBuilder: jest.fn().mockReturnValue(queryBuilder),
     };
+    auditRecord = jest.fn().mockResolvedValue(undefined);
 
     const app: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
         { provide: getRepositoryToken(User), useValue: userRepository },
+        { provide: AuditService, useValue: { record: auditRecord } },
       ],
     }).compile();
 
@@ -83,7 +87,7 @@ describe('AuthService', () => {
       .rejects.toBeInstanceOf(UnauthorizedException);
   });
 
-  it('creates and resolves an admin-only token from configured credentials', () => {
+  it('creates and resolves an admin-only token from configured credentials', async () => {
     process.env.ADMIN_ACCOUNTS_JSON = JSON.stringify([{
       id: 8,
       name: 'Site Admin',
@@ -91,7 +95,7 @@ describe('AuthService', () => {
       passwordHash: hashPassword(password),
     }]);
 
-    const result = authService.loginAdmin({ identifier: 'SITE ADMIN', password });
+    const result = await authService.loginAdmin({ identifier: 'SITE ADMIN', password });
 
     expect(result.accountId).toBe(8);
     expect(authService.resolveAdminFromHeader(`Bearer ${result.token}`)).toMatchObject({
@@ -99,5 +103,10 @@ describe('AuthService', () => {
       adminId: 8,
       role: 'admin',
     });
+    expect(auditRecord).toHaveBeenCalledWith(expect.objectContaining({
+      event: 'ADMIN_LOGIN',
+      actorId: '8',
+      actorRole: 'admin',
+    }));
   });
 });

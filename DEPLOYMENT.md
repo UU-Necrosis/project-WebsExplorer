@@ -6,6 +6,7 @@
 - Set Vercel's `VITE_BASE_URL` to `/` and `VITE_API_URL` to the public Koyeb backend origin. These variables are embedded at build time, so redeploy after changing them.
 - For a Neon + Koyeb setup, deploy the NestJS backend from the `backend/` directory using the included `backend/Dockerfile`, then set environment variables in Koyeb.
 - Keep `DATABASE_URL` private. Store it as a Koyeb or Neon secret, not in the app source.
+- If login and sign-up both show a network error, check that Vercel's `VITE_API_URL` is the real Koyeb service origin (not the example placeholder) and that Koyeb's `CORS_ORIGIN` exactly matches the Vercel origin. `VITE_BASE_URL` controls frontend asset paths; it is not the API address.
 - `render.yaml` is a legacy Render setup; do not deploy it for the Vercel/Koyeb/Neon architecture because it provisions a separate Render database.
 
 The API currently uses TypeORM synchronization (`DB_SYNCHRONIZE=true`) to create and update its schema. Keep it enabled during this deployment so the submission ownership, URL de-duplication, vote, and cooldown columns are added. Before turning synchronization off, add and apply TypeORM migrations for subsequent production schema changes.
@@ -20,6 +21,7 @@ The API currently uses TypeORM synchronization (`DB_SYNCHRONIZE=true`) to create
 - Customers vote at `POST /api/submissions/:id/votes/client` after five admin votes. A customer cannot vote on their own submission or vote twice.
 - After five admin and three distinct customer votes, the API saves the website and exposes it through `GET /api/websites-saved`.
 - A customer may create one new URL submission every seven days. Duplicate submissions to an in-progress URL can still add the customer's role-based vote during that period. Admins are exempt.
+- `GET /api/audit-logs` and `GET /api/audit-logs/verify` are admin-only. Successful admin logins, submissions, votes, and approvals are recorded in an append-only hash chain.
 - `GET /api/nodes` lists registered cluster nodes.
 - `POST /api/nodes/heartbeat` inserts or updates a node. Each node process must send `x-node-token: $NODE_REGISTRATION_TOKEN` and report its real ID, name, region, latency, and status.
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { adminAuditApi, type AdminAuditLog } from '../../../context/AdminDemoData'
+import { auditApi, type AdminAuditLog, type AuditChainVerification } from '../../../services/api'
 import './css/AdminAuditLogsPage.css'
 
 function typeBadge(type: string) {
@@ -8,6 +8,7 @@ function typeBadge(type: string) {
     add:      { cls: 'green', label: 'Added'      },
     quorum:   { cls: 'blue',  label: 'Quorum'     },
     auth:     { cls: 'blue',  label: 'Auth'       },
+    vote:     { cls: 'blue',  label: 'Vote'       },
     reject:   { cls: 'amber', label: 'Rejected'   },
     remove:   { cls: 'amber', label: 'Removed'    },
     security: { cls: 'red',   label: 'Security'   },
@@ -17,14 +18,18 @@ function typeBadge(type: string) {
 
 export default function AdminAuditLogsPage() {
   const [search, setSearch] = useState('')
+  const [typeFilter, setTypeFilter] = useState('all')
   const [logs, setLogs] = useState<AdminAuditLog[]>([])
+  const [selectedLog, setSelectedLog] = useState<AdminAuditLog | null>(null)
+  const [verification, setVerification] = useState<AuditChainVerification | null>(null)
+  const [verificationError, setVerificationError] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
 
   useEffect(() => {
     let active = true
 
-    adminAuditApi.list()
+    auditApi.list()
       .then((items) => {
         if (active) {
           setLogs(items)
@@ -40,13 +45,30 @@ export default function AdminAuditLogsPage() {
         if (active) setIsLoading(false)
       })
 
+    auditApi.verify()
+      .then((result) => {
+        if (active) setVerification(result)
+      })
+      .catch((error: unknown) => {
+        if (active) setVerificationError(error instanceof Error ? error.message : 'Unable to verify audit integrity.')
+      })
+
     return () => { active = false }
   }, [])
 
+  useEffect(() => {
+    if (!selectedLog) return
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setSelectedLog(null)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [selectedLog])
+
   const filtered = logs.filter((l) =>
-    l.event.toLowerCase().includes(search.toLowerCase()) ||
-    l.actor.toLowerCase().includes(search.toLowerCase()) ||
-    l.hash.toLowerCase().includes(search.toLowerCase())
+    (typeFilter === 'all' || l.type === typeFilter)
+    && [l.event, l.actor, l.actorRole, l.target ?? '', l.hash, l.id]
+      .some((value) => value.toLowerCase().includes(search.trim().toLowerCase()))
   )
 
   return (
@@ -57,25 +79,41 @@ export default function AdminAuditLogsPage() {
           <span className="admin-audit__breadcrumb-active">audit-logs</span>
         </div>
         <h1 className="admin-audit__title">Admin Audit Logs</h1>
-        <p className="admin-audit__subtitle">Immutable cryptographic record of every admin action.</p>
+        <p className="admin-audit__subtitle">Hash-chained record of authentication and submission review actions.</p>
       </div>
 
       <div className="admin-audit__card">
         <div className="admin-audit__toolbar">
+          <div className={`admin-audit__integrity${verification?.valid ? ' admin-audit__integrity--valid' : verification ? ' admin-audit__integrity--invalid' : ''}`} role="status">
+            <span className="admin-audit__badge-dot" />
+            {verification
+              ? verification.valid
+                ? `Chain verified · ${verification.checked} records`
+                : `Integrity check failed · record ${verification.firstInvalidId}`
+              : verificationError || 'Verifying chain…'}
+          </div>
           <div className="admin-audit__search-wrap">
             <span className="material-symbols-outlined admin-audit__search-icon">search</span>
             <input
               className="admin-audit__search"
               placeholder="Search events, actors, hash IDs..."
+              aria-label="Search audit events"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <select className="admin-audit__select">
-            <option>All Event Types</option>
-            <option>Approvals</option>
-            <option>Auth</option>
-            <option>Security</option>
+          <select
+            className="admin-audit__select"
+            aria-label="Filter by audit event type"
+            value={typeFilter}
+            onChange={(event) => setTypeFilter(event.target.value)}
+          >
+            <option value="all">All Event Types</option>
+            <option value="approve">Approvals</option>
+            <option value="add">Submissions</option>
+            <option value="vote">Votes</option>
+            <option value="auth">Authentication</option>
+            <option value="security">Security</option>
           </select>
         </div>
 
@@ -106,17 +144,20 @@ export default function AdminAuditLogsPage() {
                 <tr key={l.id}>
                   <td>
                     <div className="admin-audit__event-name">{l.event}</div>
-                    <div className="admin-audit__event-hash">{l.hash}</div>
+                    <div className="admin-audit__event-hash" title={l.hash}>{l.hash.slice(0, 12)}…{l.hash.slice(-8)}</div>
                   </td>
-                  <td><span className="admin-audit__actor">{l.actor}</span></td>
+                  <td>
+                    <span className="admin-audit__actor">{l.actor}</span>
+                    <div className="admin-audit__event-hash">{l.actorRole}</div>
+                  </td>
                   <td>
                     <span className={`admin-audit__badge admin-audit__badge--${badge.cls}`}>
                       <span className="admin-audit__badge-dot" />{badge.label}
                     </span>
                   </td>
-                  <td><span className="admin-audit__timestamp">{l.time}</span></td>
+                  <td><span className="admin-audit__timestamp">{new Date(l.time).toLocaleString('en-GB', { timeZone: 'UTC' })} UTC</span></td>
                   <td>
-                    <button className="admin-audit__inspect-btn">Inspect</button>
+                    <button type="button" className="admin-audit__inspect-btn" onClick={() => setSelectedLog(l)}>Inspect</button>
                   </td>
                 </tr>
               )
@@ -129,6 +170,30 @@ export default function AdminAuditLogsPage() {
           </tbody>
         </table>
       </div>
+      {selectedLog && (
+        <div className="admin-audit__backdrop" onMouseDown={(event) => {
+          if (event.target === event.currentTarget) setSelectedLog(null)
+        }}>
+          <section className="admin-audit__drawer" role="dialog" aria-modal="true" aria-labelledby="admin-audit-drawer-title">
+            <header className="admin-audit__drawer-header">
+              <div>
+                <p className="admin-audit__subtitle">Audit record #{selectedLog.id}</p>
+                <h2 id="admin-audit-drawer-title">{selectedLog.event}</h2>
+              </div>
+              <button type="button" className="admin-audit__inspect-btn" onClick={() => setSelectedLog(null)}>Close</button>
+            </header>
+            <dl className="admin-audit__details">
+              <div><dt>Actor</dt><dd>{selectedLog.actor} ({selectedLog.actorRole})</dd></div>
+              <div><dt>Target</dt><dd>{selectedLog.target ?? '—'}</dd></div>
+              <div><dt>Recorded at (UTC)</dt><dd>{selectedLog.time}</dd></div>
+              <div><dt>Record hash</dt><dd>{selectedLog.hash}</dd></div>
+              <div><dt>Previous hash</dt><dd>{selectedLog.previousHash}</dd></div>
+            </dl>
+            <h3 className="admin-audit__details-title">Event details</h3>
+            <pre className="admin-audit__json">{JSON.stringify(selectedLog.details, null, 2)}</pre>
+          </section>
+        </div>
+      )}
     </div>
   )
 }

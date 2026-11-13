@@ -16,7 +16,30 @@ export interface SubmissionCooldown {
   availableAt: string | null
 }
 
-const BASE = (import.meta.env.VITE_API_URL ?? 'http://localhost:3000').replace(/\/+$/, '')
+export interface AdminAuditLog {
+  id: string
+  event: string
+  type: string
+  actorId: string | null
+  actor: string
+  actorRole: string
+  targetId: string | null
+  target: string | null
+  details: Record<string, unknown>
+  time: string
+  previousHash: string
+  hash: string
+}
+
+export interface AuditChainVerification {
+  valid: boolean
+  checked: number
+  firstInvalidId: string | null
+  headHash: string
+}
+
+const configuredApiUrl = import.meta.env.VITE_API_URL?.trim()
+const BASE = (configuredApiUrl || (import.meta.env.DEV ? 'http://localhost:3000' : '')).replace(/\/+$/, '')
 
 function authHeader(): Record<string, string> {
   const customerToken = localStorage.getItem('customer_token')
@@ -27,15 +50,24 @@ function authHeader(): Record<string, string> {
 
 async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
   const headers = new Headers(opts.headers)
-  if (!headers.has('Content-Type')) headers.set('Content-Type', 'application/json')
+  if (opts.body != null && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json')
   for (const [name, value] of Object.entries(authHeader())) headers.set(name, value)
 
-  const res = await fetch(`${BASE}${path}`, {
-    ...opts,
-    headers: {
-      ...Object.fromEntries(headers.entries()),
-    },
-  })
+  if (!BASE) throw new Error('Backend API URL is not configured. Set VITE_API_URL in Vercel and redeploy.')
+  let res: Response
+  try {
+    res = await fetch(`${BASE}${path}`, {
+      ...opts,
+      headers: {
+        ...Object.fromEntries(headers.entries()),
+      },
+    })
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error(`Could not connect to the backend at ${BASE}. Check VITE_API_URL and the backend CORS_ORIGIN setting.`)
+    }
+    throw error
+  }
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))
     throw new Error(body?.message ?? `HTTP ${res.status}`)
@@ -99,5 +131,6 @@ export const nodesApi = {
 }
 
 export const auditApi = {
-  list: () => req<unknown[]>('/api/audit-logs'),
+  list: (limit = 200) => req<AdminAuditLog[]>(`/api/audit-logs?limit=${limit}`),
+  verify: () => req<AuditChainVerification>('/api/audit-logs/verify'),
 }

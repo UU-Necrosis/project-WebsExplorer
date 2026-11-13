@@ -4,6 +4,7 @@ import { ClusterNode } from './entities/cluster-node.entity';
 import { User } from './entities/user.entity';
 import { WebsiteSaved } from './entities/website-saved.entity';
 import { WebsiteSubmission } from './entities/website-submission.entity';
+import { AuditService } from './audit.service';
 import { DirectoryService } from './directory.service';
 
 describe('DirectoryService submission review workflow', () => {
@@ -66,15 +67,17 @@ describe('DirectoryService submission review workflow', () => {
     const dataSource = {
       transaction: jest.fn((callback: (transactionManager: typeof manager) => Promise<unknown>) => callback(manager)),
     };
+    const auditService = { record: jest.fn().mockResolvedValue(undefined) };
     const service = new DirectoryService(
       {} as unknown as Repository<WebsiteSubmission>,
       {} as unknown as Repository<WebsiteSaved>,
       {} as unknown as Repository<ClusterNode>,
       userRepository as unknown as Repository<User>,
       dataSource as unknown as DataSource,
+      auditService as unknown as AuditService,
     );
 
-    return { service, manager, submissionRepository, userRepository, savedRepository };
+    return { service, manager, submissionRepository, userRepository, savedRepository, auditService };
   };
 
   it('merges a duplicate URL and credits a new customer vote', async () => {
@@ -84,7 +87,7 @@ describe('DirectoryService submission review workflow', () => {
       find: jest.fn(),
       save: jest.fn(async (value: typeof existing) => value),
     };
-    const { service } = createService({ transactionalSubmission: transactionRepository });
+    const { service, auditService } = createService({ transactionalSubmission: transactionRepository });
 
     const result = await service.createSubmission({
       name: 'Example',
@@ -103,6 +106,7 @@ describe('DirectoryService submission review workflow', () => {
     expect(result.message).toContain('customer vote was added');
     expect(existing.clientVotes).toEqual(['customer-id']);
     expect(transactionRepository.save).toHaveBeenCalledTimes(1);
+    expect(auditService.record).toHaveBeenCalled();
   });
 
   it('rejects a new customer URL during the seven-day cooldown', async () => {
@@ -172,7 +176,12 @@ describe('DirectoryService submission review workflow', () => {
       transactionalSaved: transactionSavedRepository,
     });
 
-    await expect(service.recordVote('submission-id', 'client', 'customer-3'))
+    await expect(service.recordVote('submission-id', {
+      id: 'customer-3',
+      name: 'Customer 3',
+      email: 'customer3@example.com',
+      role: 'customer',
+    }))
       .resolves.toMatchObject({ queue: 'approved', status: 'Visible' });
     expect(underReview.clientVotes).toEqual(['customer-1', 'customer-2', 'customer-3']);
     expect(transactionSavedRepository.save).toHaveBeenCalledTimes(1);
@@ -186,7 +195,12 @@ describe('DirectoryService submission review workflow', () => {
     };
     const { service } = createService({ transactionalSubmission: transactionRepository });
 
-    await expect(service.recordVote('submission-id', 'client', 'customer-id'))
+    await expect(service.recordVote('submission-id', {
+      id: 'customer-id',
+      name: 'Customer',
+      email: 'customer@example.com',
+      role: 'customer',
+    }))
       .rejects.toBeInstanceOf(ConflictException);
     expect(transactionRepository.save).not.toHaveBeenCalled();
   });

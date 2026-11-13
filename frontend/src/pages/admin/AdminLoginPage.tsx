@@ -183,7 +183,7 @@ export default function AdminLoginPage() {
               </div>
               {[
                 { label: 'Submission Queue', val: '99.98% uptime' },
-                { label: 'Audit Ledger',     val: 'Sealed 2m ago' },
+                { label: 'Audit Logs',       val: 'Hash-chain verification' },
                 { label: 'SGX Enclaves',     val: '5/5 online' },
                 { label: 'Consensus Sync',   val: '12ms avg' },
               ].map((r) => (
@@ -202,7 +202,7 @@ export default function AdminLoginPage() {
                 { icon: 'verified_user',      text: 'RFC-7519 JWT · Zero-PII architecture' },
                 { icon: 'lock',               text: 'End-to-end TLS 1.3 encryption' },
                 { icon: 'shield',             text: 'ISO/IEC 27001 certified' },
-                { icon: 'history_toggle_off', text: 'Full immutable audit trail' },
+                { icon: 'history_toggle_off', text: 'Hash-verified audit records' },
               ].map((i) => (
                 <div key={i.icon} className="admin-login__panel-sec">
                   <span className="material-symbols-outlined">{i.icon}</span>{i.text}

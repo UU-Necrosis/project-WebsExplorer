@@ -262,20 +262,9 @@ Overview chart values: throughput `1.48k chk/s`; live inquiries `240.8M`; scrub 
 | us-west-leader-04 | Oregon | 18ms |
 | sa-east-sync-03 | Sao Paulo | 61ms |
 
-## Audit Log Fixture
+## Audit Logs
 
-Source: `pages/admin/security/AdminAuditLogsPage.tsx` (`LOGS`).
-
-| ID | Event | Hash | Actor | Time | Type |
-| --- | --- | --- | --- | --- | --- |
-| 1 | SUBMISSION_APPROVED | 0x8a92...fc10 | root_operator | 2026-11-06 07:12:04 UTC | approve |
-| 2 | SUBMISSION_REJECTED | 0x1c44...aa81 | root_operator | 2026-11-06 06:58:31 UTC | reject |
-| 3 | DIRECTORY_ENTRY_ADDED | 0x4f12...7e99 | system | 2026-11-06 06:45:18 UTC | add |
-| 4 | CONSENSUS_QUORUM_MET | 0x9c31...2b88 | consensus | 2026-11-06 06:30:02 UTC | quorum |
-| 5 | SUBMISSION_APPROVED | 0x77e1...912a | root_operator | 2026-11-06 06:15:44 UTC | approve |
-| 6 | ADMIN_LOGIN | 0xcc21...ff09 | root_operator | 2026-11-06 05:59:11 UTC | auth |
-| 7 | ENCLAVE_REKEY | 0xde90...3311 | system | 2026-11-06 05:30:00 UTC | security |
-| 8 | DIRECTORY_ENTRY_REMOVED | 0xab33...de12 | root_operator | 2026-11-06 04:44:22 UTC | remove |
+The admin audit page now loads persisted events from the backend API and verifies the database hash chain. It does not use static fixture records.
 
 ## Login Panel Fixtures
 
@@ -286,7 +275,7 @@ System status rows:
 | Label | Value |
 | --- | --- |
 | Submission Queue | 99.98% uptime |
-| Audit Ledger | Sealed 2m ago |
+| Audit Logs | Hash-chain verification |
 | SGX Enclaves | 5/5 online |
 | Consensus Sync | 12ms avg |
 
@@ -297,4 +286,4 @@ Security and compliance labels:
 | verified_user | RFC-7519 JWT - Zero-PII architecture |
 | lock | End-to-end TLS 1.3 encryption |
 | shield | ISO/IEC 27001 certified |
-| history_toggle_off | Full immutable audit trail |
+| history_toggle_off | Hash-verified audit records |

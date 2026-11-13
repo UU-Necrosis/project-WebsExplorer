@@ -7,6 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 import { Repository } from 'typeorm';
+import { AuditService } from './audit.service';
 import { User } from './entities/user.entity';
 
 export interface AuthUserPayload {
@@ -31,6 +32,7 @@ export class AuthService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly auditService: AuditService,
   ) {}
 
   private normalizeEmail(email: string) {
@@ -162,7 +164,7 @@ export class AuthService {
     };
   }
 
-  loginAdmin(input: { identifier?: string; email?: string; password?: string }) {
+  async loginAdmin(input: { identifier?: string; email?: string; password?: string }) {
     const identifier = this.normalizeEmail(input.identifier?.trim() || input.email || '');
     const password = input.password ?? '';
     if (!identifier || !password) throw new UnauthorizedException('Invalid admin name/email or password.');
@@ -183,8 +185,16 @@ export class AuthService {
       email: account.email,
       role: 'admin',
     };
+    const token = this.createToken(payload);
+    await this.auditService.record({
+      event: 'ADMIN_LOGIN',
+      type: 'auth',
+      actorId: String(account.id),
+      actorName: account.name,
+      actorRole: 'admin',
+    });
     return {
-      token: this.createToken(payload),
+      token,
       accountId: account.id,
       user: { id: payload.id, name: payload.name, email: payload.email },
     };

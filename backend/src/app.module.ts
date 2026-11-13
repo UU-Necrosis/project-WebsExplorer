@@ -2,6 +2,9 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuditController } from './audit.controller';
+import { AuditService } from './audit.service';
+import { AuditLog } from './entities/audit-log.entity';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { ClusterNode } from './entities/cluster-node.entity';
@@ -24,12 +27,12 @@ import { WebsitesSavedController } from './websites-saved.controller';
       password: process.env.DB_PASSWORD ?? 'khai_ID3571',
       database: process.env.DB_DATABASE ?? 'web-explore.db',
       ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
-      entities: [WebsiteSubmission, WebsiteSaved, ClusterNode, User],
+      entities: [WebsiteSubmission, WebsiteSaved, ClusterNode, User, AuditLog],
       synchronize: process.env.DB_SYNCHRONIZE === 'true',
     }),
-    TypeOrmModule.forFeature([WebsiteSubmission, WebsiteSaved, ClusterNode, User]),
+    TypeOrmModule.forFeature([WebsiteSubmission, WebsiteSaved, ClusterNode, User, AuditLog]),
   ],
-  controllers: [AppController, AuthController, SubmissionsController, WebsitesSavedController, NodesController],
-  providers: [AppService, AuthService, DirectoryService],
+  controllers: [AppController, AuthController, AuditController, SubmissionsController, WebsitesSavedController, NodesController],
+  providers: [AppService, AuthService, AuditService, DirectoryService],
 })
 export class AppModule {}
