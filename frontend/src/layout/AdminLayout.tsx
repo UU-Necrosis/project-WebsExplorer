@@ -1,12 +1,8 @@
 import { useState } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { DEMO_SUBMISSIONS, getSubmissionQueue } from '../context/ClientSubmit'
+import { getSubmissionQueue, useClientSubmissions } from '../context/ClientSubmissionStore'
 import './AdminLayout.css'
-
-const pendingSubmissionCount = DEMO_SUBMISSIONS.filter(
-  (submission) => getSubmissionQueue(submission) === 'pending'
-).length
 
 const NAV_ITEMS = [
   { label: 'Overview',       path: '/admin/overview',     icon: 'grid_view' },
@@ -24,7 +20,11 @@ const INFRA_ITEMS = [
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const { logout } = useAuth()
+  const { submissions, isLoading, loadError } = useClientSubmissions()
   const navigate = useNavigate()
+  const pendingSubmissionCount = submissions.filter(
+    (submission) => getSubmissionQueue(submission) === 'pending'
+  ).length
 
   function handleLogout() {
     logout()
@@ -46,28 +46,11 @@ export default function AdminLayout() {
           </button>
 
           <div className="admin-header__cluster">
-            <span className="admin-header__cluster-dot" />
-            <span>PRD-CLUSTER-01</span>
-            <span style={{ color: '#94a3b8' }}>|</span>
-            <span>12ms</span>
+            <span>ADMIN CONSOLE</span>
           </div>
         </div>
 
         <div className="admin-header__right">
-          <div className="admin-header__role-badge">
-            <span>ADMIN ROLE:</span>
-            <strong>ROOT_OPERATOR</strong>
-          </div>
-
-          <button className="admin-header__icon-btn" title="Settings">
-            <span className="material-symbols-outlined">tune</span>
-          </button>
-
-          <button className="admin-header__icon-btn" title="Notifications">
-            <span className="material-symbols-outlined">notifications</span>
-            <span className="admin-header__notif-dot" />
-          </button>
-
           <div
             className="admin-header__avatar"
             onClick={handleLogout}
@@ -87,14 +70,6 @@ export default function AdminLayout() {
             <span className="admin-sidebar__brand-version">Admin Operations v1.0</span>
           </div>
 
-          <div className="admin-sidebar__sync">
-            <div className="admin-sidebar__sync-left">
-              <span className="admin-sidebar__sync-dot" />
-              <span className="admin-sidebar__sync-label">Sync Gateway</span>
-            </div>
-            <span className="admin-sidebar__sync-value">99.98%</span>
-          </div>
-
           <span className="admin-sidebar__section-label">Operational Registry</span>
           <nav className="admin-sidebar__nav">
             {NAV_ITEMS.map((item) => (
@@ -107,7 +82,7 @@ export default function AdminLayout() {
               >
                 <span className="material-symbols-outlined">{item.icon}</span>
                 <span>{item.label}</span>
-                {item.path === '/admin/submissions' && (
+                {item.path === '/admin/submissions' && !isLoading && !loadError && pendingSubmissionCount > 0 && (
                   <span className="admin-sidebar__nav-badge">{pendingSubmissionCount}</span>
                 )}
               </NavLink>
@@ -131,19 +106,6 @@ export default function AdminLayout() {
           </nav>
         </div>
 
-        <div className="admin-sidebar__bottom">
-          <div className="admin-sidebar__security">
-            <span className="material-symbols-outlined">shield</span>
-            <div>
-              <span className="admin-sidebar__security-title">Audited Enclave</span>
-              <span className="admin-sidebar__security-sub">TLS 1.3 / Zero-Trust</span>
-            </div>
-          </div>
-          <div className="admin-sidebar__node">
-            <span className="admin-sidebar__node-label">NODE: us-east-core-09</span>
-            <span className="material-symbols-outlined">cloud_done</span>
-          </div>
-        </div>
       </aside>
 
       {/* ── Page content ────────────────────────────────── */}

@@ -18,7 +18,7 @@ export default function AdminSubmissionsPage() {
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null)
   const [drawerView, setDrawerView] = useState<'inspect' | 'preview' | 'history'>('inspect')
   const [notice, setNotice] = useState('')
-  const { accountId, demoAccounts } = useAuth()
+  const { accountId } = useAuth()
 
   useEffect(() => {
     if (!selectedSubmission) return
@@ -51,22 +51,19 @@ export default function AdminSubmissionsPage() {
   const totalVotes = pendingAdminVotes + auditCommunityVotes
   const totalVoteSlots = pendingCount * ADMIN_VOTE_THRESHOLD + auditCount * CLIENT_VOTE_THRESHOLD
   const voteProgress = totalVoteSlots ? Math.round((totalVotes / totalVoteSlots) * 100) : 0
-  const mockKpis = [
-    { label: 'Pending Review', val: String(pendingCount), unit: 'websites', meta: 'Admin votes required for audit', status: 'Sample data', pct: pendingAdminVoteProgress, icon: 'inbox' },
-    { label: 'Under Community Audit', val: String(auditCount), unit: 'websites', meta: 'Client votes required for review', status: 'Sample data', pct: auditCommunityVoteProgress, icon: 'groups' },
-    { label: 'Queued Submissions', val: String(queuedSubmissions.length), unit: 'websites', meta: 'Pending plus community audit', status: 'Sample data', pct: 100, icon: 'list_alt' },
-    { label: 'Stage Votes', val: String(totalVotes), unit: 'votes', meta: `Across ${queuedSubmissions.length} queued websites`, status: `${voteProgress}% quorum`, pct: voteProgress, icon: 'how_to_vote' },
+  const dataStatus = loadError ? 'API unavailable' : isLoading ? 'Loading' : 'Connected'
+  const displayValue = (value: number) => loadError ? 'N/A' : isLoading ? '...' : String(value)
+  const kpis = [
+    { label: 'Pending Review', val: displayValue(pendingCount), unit: 'websites', meta: 'Admin votes required for audit', status: dataStatus, pct: pendingAdminVoteProgress, icon: 'inbox' },
+    { label: 'Under Community Audit', val: displayValue(auditCount), unit: 'websites', meta: 'Client votes required for review', status: dataStatus, pct: auditCommunityVoteProgress, icon: 'groups' },
+    { label: 'Queued Submissions', val: displayValue(queuedSubmissions.length), unit: 'websites', meta: 'Pending plus community audit', status: dataStatus, pct: null, icon: 'list_alt' },
+    { label: 'Stage Votes', val: displayValue(totalVotes), unit: 'votes', meta: `Across ${queuedSubmissions.length} queued websites`, status: dataStatus === 'Connected' ? `${voteProgress}% quorum` : dataStatus, pct: voteProgress, icon: 'how_to_vote' },
   ]
   const selectedVoteIds = selectedSubmission
     ? selectedSubmission.queue === 'pending' ? selectedSubmission.adminVotes : selectedSubmission.clientVotes
     : []
   const selectedVoteLimit = selectedSubmission?.queue === 'pending' ? ADMIN_VOTE_THRESHOLD : CLIENT_VOTE_THRESHOLD
   const selectedVoteLabel = selectedSubmission?.queue === 'pending' ? 'Admin votes' : 'Client votes'
-  const selectedVoteAccounts = selectedVoteIds.map((id) => ({
-    id,
-    account: demoAccounts.find((account) => account.id === String(id)),
-  }))
-
   async function castCurrentVote(submission: Submission) {
     const voterId = Number(accountId)
     if (!Number.isInteger(voterId) || voterId < 1) {
@@ -113,30 +110,10 @@ export default function AdminSubmissionsPage() {
         </div>
       </div>
 
-      {(loadError || notice) && <p className="admin-subs__subtitle" role="status">{notice || loadError}</p>}
+      {notice && <p className="admin-subs__subtitle" role="status">{notice}</p>}
 
-      {/* Banner */}
-      <div className="admin-subs__banner">
-        <div className="admin-subs__banner-left">
-          <div className="admin-subs__banner-icon">
-            <span className="material-symbols-outlined">verified_user</span>
-          </div>
-          <div>
-            <div className="admin-subs__banner-tag">ADMIN PROTOCOL · RFC-7519 · ZERO USER TELEMETRY</div>
-            <div className="admin-subs__banner-desc">
-              Only verified email and salted hash credentials are retained. No tracking cookies, no IP logging.
-            </div>
-          </div>
-        </div>
-        <div className="admin-subs__banner-hash">
-          <span>AUDIT HASH:</span><code>0x9f4a...88e1</code>
-          <span className="material-symbols-outlined" style={{ fontSize: 16, color: '#059669' }}>lock</span>
-        </div>
-      </div>
-
-      {/* Mock KPIs */}
       <div className="admin-subs__kpi-grid">
-        {mockKpis.map((k) => (
+        {kpis.map((k) => (
           <div key={k.label} className="admin-subs__kpi">
             <div className="admin-subs__kpi-top">
               <span className="admin-subs__kpi-label">{k.label}</span>
@@ -145,13 +122,11 @@ export default function AdminSubmissionsPage() {
             <div>
               <div className="admin-subs__kpi-val">{k.val} <span style={{ fontSize: '0.875rem', color: '#94a3b8', fontWeight: 400 }}>{k.unit}</span></div>
               <div className="admin-subs__kpi-meta"><span>{k.meta}</span>{k.status && <strong>{k.status}</strong>}</div>
-              <div className="admin-subs__kpi-bar"><div className="admin-subs__kpi-bar-fill" style={{ width: `${k.pct}%` }} /></div>
+              {!isLoading && !loadError && k.pct !== null && <div className="admin-subs__kpi-bar"><div className="admin-subs__kpi-bar-fill" style={{ width: `${k.pct}%` }} /></div>}
             </div>
           </div>
         ))}
       </div>
-      <p className="admin-subs__demo-note">Dashboard metrics and submission details are sample data for UI demonstration.</p>
-
       {notice && (
         <div className="admin-subs__notice" role="status">
           <span>{notice}</span>
@@ -165,17 +140,16 @@ export default function AdminSubmissionsPage() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
             <div className="admin-subs__tabs">
               <button type="button" className={`admin-subs__tab${tab === 'pending' ? ' admin-subs__tab--active' : ''}`} aria-pressed={tab === 'pending'} onClick={() => setTab('pending')}>
-                Pending Ingestion <span className="admin-subs__tab-badge">{pendingCount}</span>
+                Pending Ingestion <span className="admin-subs__tab-badge">{displayValue(pendingCount)}</span>
               </button>
               <button type="button" className={`admin-subs__tab${tab === 'audit' ? ' admin-subs__tab--active' : ''}`} aria-pressed={tab === 'audit'} onClick={() => setTab('audit')}>
-                Under Community Audit <span className="admin-subs__tab-badge admin-subs__tab-badge--muted">{auditCount}</span>
+                Under Community Audit <span className="admin-subs__tab-badge admin-subs__tab-badge--muted">{displayValue(auditCount)}</span>
               </button>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.8125rem', color: '#64748b' }}>
-              Showing <strong style={{ color: '#0f172a' }}>{filtered.length} of {activeSubmissions.length}</strong> {tab === 'pending' ? 'pending' : 'under audit'}
-              <span style={{ display: 'flex', alignItems: 'center', gap: 4, background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 9999, padding: '2px 10px', color: '#059669', fontSize: 11, fontWeight: 600 }}>
-                <span style={{ width: 6, height: 6, borderRadius: 9999, background: '#059669', display: 'inline-block', animation: 'pulse 2s infinite' }} />
-                Live Ingest Feed
+              Showing <strong style={{ color: '#0f172a' }}>{loadError ? 'N/A' : isLoading ? 'Loading' : `${filtered.length} of ${activeSubmissions.length}`}</strong> {tab === 'pending' ? 'pending' : 'under audit'}
+              <span style={{ display: 'flex', alignItems: 'center', gap: 4, background: loadError ? '#fff7ed' : '#f0fdf4', border: `1px solid ${loadError ? '#fed7aa' : '#bbf7d0'}`, borderRadius: 9999, padding: '2px 10px', color: loadError ? '#c2410c' : '#059669', fontSize: 11, fontWeight: 600 }}>
+                {dataStatus}
               </span>
             </div>
           </div>
@@ -225,11 +199,7 @@ export default function AdminSubmissionsPage() {
                   </a>
                 </td>
                 <td>
-                  <div className="admin-subs__hash-verified">
-                    <span className="admin-subs__hash-verified-dot" />RFC VERIFIED
-                  </div>
-                  <div className="admin-subs__hash-val">auth-hash: {s.hash}</div>
-                  <div className="admin-subs__hash-sub">Zero-PII Ping Confirmed</div>
+                  <div className="admin-subs__hash-val">Auth hash: {s.hash}</div>
                 </td>
                 <td>
                   <div className="admin-subs__consensus-wrap">
@@ -256,9 +226,14 @@ export default function AdminSubmissionsPage() {
               </tr>
               )
             })}
+            {isLoading && (
+              <tr>
+                <td className="admin-subs__empty" colSpan={4}>Loading submissions...</td>
+              </tr>
+            )}
             {!isLoading && filtered.length === 0 && (
               <tr>
-                <td className="admin-subs__empty" colSpan={4}>{loadError || 'No submissions match this filter.'}</td>
+                <td className="admin-subs__empty" colSpan={4}>{loadError || (search.trim() ? 'No submissions match this filter.' : 'No submissions yet.')}</td>
               </tr>
             )}
           </tbody>
@@ -315,11 +290,10 @@ export default function AdminSubmissionsPage() {
                 <section className="admin-subs__detail-section">
                   <h3>{selectedVoteLabel} by account</h3>
                   <ul className="admin-subs__vote-list">
-                    {selectedVoteAccounts.map(({ id, account }) => (
+                    {selectedVoteIds.map((id) => (
                       <li key={id}>
                         <span className="admin-subs__vote-dot" />
-                        <span><strong>{account?.name ?? `Account ${id}`}</strong>{account ? ` · ${account.email}` : ''}</span>
-                        <time>{account?.status ?? 'unknown'}</time>
+                        <span><strong>Account {id}</strong></span>
                       </li>
                     ))}
                     {selectedVoteIds.length < selectedVoteLimit ? (
@@ -330,27 +304,19 @@ export default function AdminSubmissionsPage() {
                   </ul>
                 </section>
                 <section className="admin-subs__detail-section">
-                  <h3>Raw platform data <span className="admin-subs__sample-label">sample</span></h3>
+                  <h3>Platform data</h3>
                   <pre className="admin-subs__payload">{JSON.stringify({ name: selectedSubmission.name, url: selectedSubmission.url, submittedBy: selectedSubmission.submittedBy, tags: selectedSubmission.tags }, null, 2)}</pre>
-                </section>
-                <section className="admin-subs__detail-section">
-                  <h3>Security checks <span className="admin-subs__sample-label">sample</span></h3>
-                  <ul className="admin-subs__scan-list">
-                    <li><span className="material-symbols-outlined">check_circle</span> HTTPS endpoint reachable</li>
-                    <li><span className="material-symbols-outlined">check_circle</span> Zero-PII ping confirmed</li>
-                    <li><span className="material-symbols-outlined">check_circle</span> RFC verification passed</li>
-                  </ul>
                 </section>
               </div>
             ) : drawerView === 'history' ? (
               <div className="admin-subs__drawer-body">
-                <p className="admin-subs__history-note">Vote IDs are mapped to demo account details. Vote timestamps are not included in the sample data.</p>
+                <p className="admin-subs__history-note">Voter IDs are stored by the API; individual vote timestamps are not available.</p>
                 <ol className="admin-subs__timeline">
                   <li><strong>Submission received</strong><span>{selectedSubmission.submittedBy} · {selectedSubmission.submittedAt}</span></li>
-                  {selectedVoteAccounts.map(({ id, account }) => (
+                  {selectedVoteIds.map((id) => (
                     <li key={id}>
                       <strong>{selectedVoteLabel} recorded</strong>
-                      <span>{account?.name ?? `Account ${id}`}{account ? ` · ${account.email}` : ''}</span>
+                      <span>Account {id}</span>
                     </li>
                   ))}
                 </ol>
