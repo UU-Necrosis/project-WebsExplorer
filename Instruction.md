@@ -3,7 +3,7 @@
 This project uses:
 
 - Frontend: Vercel
-- Backend: Koyeb
+- Backend: Railway
 - Database: Neon
 
 ---
@@ -85,7 +85,7 @@ VITE_API_URL=http://localhost:3000
 - [ ] Create a Neon project
 - [ ] Create a Postgres database
 - [ ] Copy the connection string
-- [ ] Use it as the `DATABASE_URL` in Koyeb
+- [ ] Use it as the `DATABASE_URL` secret in Railway
 - [ ] Use it in local backend if testing against Neon
 
 Example:
@@ -104,40 +104,51 @@ DB_SSL=true
 
 ---
 
-## 3. Koyeb backend deployment checklist
+## 3. Railway backend deployment checklist
 
-### Create service
+### Create the backend service
 
-- [ ] Go to Koyeb
-- [ ] Create a new service
-- [ ] Connect GitHub repo
-- [ ] Set app root to `backend`
-- [ ] Use Dockerfile from `backend/Dockerfile`
-- [ ] Set port to `3000`
+- [ ] Create a Railway project from the GitHub repository
+- [ ] Add a service for the backend and set its root directory to `/backend`
+- [ ] Use the included `backend/Dockerfile`
+- [ ] Select Singapore if available to keep the service near the Neon database
+- [ ] Do not create a Railway PostgreSQL database; the app uses the existing Neon project
+- [ ] Generate a public domain and set the service health check path to `/`
 
 ### Add env vars
 
 ```env
 NODE_ENV=production
-PORT=3000
-DATABASE_URL=postgres://<user>:<password>@<host>/<database>?sslmode=require
+DATABASE_URL=<Neon pooled connection string>
 DB_SYNCHRONIZE=true
 DB_SSL=true
-CORS_ORIGIN=https://<your-vercel-app>.vercel.app
-NODE_REGISTRATION_TOKEN=replace-with-a-long-random-secret
+CORS_ORIGIN=https://web-explorer-com-brgd.vercel.app
+AUTH_TOKEN_SECRET=<random secret of at least 32 characters>
+ADMIN_ACCOUNTS_JSON=[{"id":1,"name":"Admin","email":"admin@example.com","passwordHash":"<lowercase-sha256-hash>"}]
+NODE_REGISTRATION_TOKEN=<long random secret>
+```
+
+Railway supplies `PORT`; do not set it manually. Set `CORS_ORIGIN` to the exact production Vercel origin. Keep secrets in Railway service variables, not in source control.
+
+Generate `AUTH_TOKEN_SECRET` and `NODE_REGISTRATION_TOKEN` as random secrets locally:
+
+```powershell
+node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
 ```
 
 ### Deploy
 
 - [ ] Deploy the service
-- [ ] Copy the public Koyeb URL
+- [ ] Copy the public Railway URL
 - [ ] Save it for the frontend config
 
 Example:
 
 ```text
-https://webs-explore-api.koyeb.app
+https://webs-explore-api.up.railway.app
 ```
+
+Use the exact public domain Railway generates for your service; the example domain may not be available.
 
 ---
 
@@ -154,13 +165,13 @@ https://webs-explore-api.koyeb.app
 ### Add env vars
 
 ```env
-VITE_API_URL=https://<your-koyeb-backend-url>
+VITE_API_URL=https://<your-railway-backend-url>
 ```
 
 Example:
 
 ```env
-VITE_API_URL=https://webs-explore-api.koyeb.app
+VITE_API_URL=https://webs-explore-api.up.railway.app
 ```
 
 Also make sure backend CORS matches the deployed frontend domain:
@@ -168,6 +179,8 @@ Also make sure backend CORS matches the deployed frontend domain:
 ```env
 CORS_ORIGIN=https://<your-vercel-app>.vercel.app
 ```
+
+Redeploy the Vercel frontend after changing `VITE_API_URL`; Vite embeds it at build time.
 
 ---
 
@@ -202,19 +215,23 @@ Example signup request:
 ## 6. Quick warnings
 
 - [ ] Never push raw `DATABASE_URL` to GitHub
-- [ ] Keep all secrets in Koyeb, Vercel, and Neon
+- [ ] Keep all secrets in Railway and Neon; only `VITE_API_URL` belongs in Vercel
 - [ ] If frontend cannot reach backend, check `VITE_API_URL`
-- [ ] If backend cannot start, check port 3000 and `.env`
+- [ ] If backend cannot start, check Railway deploy logs and environment variables
 - [ ] If DB connection fails, verify Neon or local PostgreSQL is running
+- [ ] Do not add a paid Railway plan or Railway database if only the free allowance should be used
+- [ ] Verify the linked GitHub account to enable full-trial outbound network access to Neon
+- [ ] Monitor Railway credits; the $5 trial credit lasts up to 30 days, then the Free plan includes $1 in monthly usage credits
+- [ ] Do not add a payment method if the account must not incur charges; the service may stop when its available credits are exhausted
 
 ---
 
-## 7. Final stack
+## 7. Deployment stack
 
-Recommended production setup:
+Current deployment setup:
 
 - Vercel for frontend
-- Koyeb for backend
+- Railway for backend
 - Neon for PostgreSQL
 
-This is the correct stack for this project.
+Railway's free trial and monthly Free-plan credit are usage-limited and do not guarantee that the backend will stay online continuously.
